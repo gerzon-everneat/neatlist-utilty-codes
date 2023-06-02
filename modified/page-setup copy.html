@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+  <!-- Memberstack webflow package for email verification -->
+  <script data-memberstack-app="app_clb7gt4hl005w0tgr68fw4uxg" src="https://static.memberstack.com/scripts/v1/memberstack.js" type="text/javascript"></script>
+  <script src="../neatlist.js"></script>
+
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  
+</head>
+<body>
+ 
+  <input type="hidden" data-sessioned>
+  <input type="hidden" data-user_account_id>
+  <input type="hidden" data-email>
+  <input type="hidden" data-account-type>
+  <input type="hidden" data-user_account_id>
+  <input type="hidden" data-fullName>
+  <input type="hidden" data-page-owner>
+
+
+
+</body>
+</html>
+<!-- dont include the html file above -->
+<script>
+    console.log(document.querySelector('[data-email]').value)
+    //@field_760997 is user_email in accountprofile
+    
+    $(document).ready(function(){
+    $("#professional-profile-email").attr("readonly",true)
+    $("#professional-profile-fullname").attr("readonly",true)
+    $("#professional-profile-phone").attr("readonly",true)
+    var verified;
+    
+    window.$memberstackDom.getCurrentMember().then((member) => {
+    if (member.data) {
+    console.log(member.data, "logged in")
+    //let getCredits = getCreditsForMember(member)
+    ///console.log(getCredits, "last test")
+        console.log(member.data.customFields["account-type"], "memberstack")
+         //sessionStorage.setItem("fullName", member.data.customFields["first-name"] + " " + member.data.customFields["last-name"])
+        const fullNameInput = document.querySelector('[data-fullname]');
+        fullNameInput.value = member.data.customFields["first-name"] + " " + member.data.customFields["last-name"]
+
+        //$("#create-profile-full-name").val(sessionStorage.getItem("fullName"))
+        $("#create-profile-full-name").val(fullNameInput.value)
+
+          if(member.data.customFields["account-type"]=="company") {
+              $("#nav-link-dashboard-pro").hide()
+              $("#nav-link-dashboard").show()
+              //$("#nav-link-dashboard").attr("href", "https://www.neatlist.co/dashboards/dashboard")
+              // window.location.href="/dashboards/dashboard"
+          } else if(member.data.customFields["account-type"]=="individual") {
+              $("#nav-link-dashboard-pro").hide()
+              $("#nav-link-dashboard").show()
+              //$("#nav-link-dashboard").attr("href", "https://www.neatlist.co/dashboards/dashboard")
+              //window.location.href="/dashboards/dashboard"
+          } else if(member.data.customFields["account-type"]=="professional") {
+              $("#nav-link-dashboard-pro").show()
+              $("#nav-link-dashboard").hide()
+              //window.location.href="/dashboards/dashboard-prof"
+          } else {
+              console.log("no account-type")
+          }
+          //if(sessionStorage.getItem("sessioned") == null) {
+      if(!document.querySelector('[data-sessioned]').value) {
+          //sessionStorage.setItem("sessioned", true, member.data.auth.email)
+          document.querySelector('[data-sessioned]').value = true
+          
+          //sessionStorage.setItem("email", member.data.auth.email)
+          document.querySelector('[data-email]').value = member.data.auth.email
+
+          //sessionStorage.setItem("account-type", member.data.customFields["account-type"])
+          document.querySelector('[data-account-type]').value = member.data.customFields["account-type"]
+          //window.location.href="/home"
+          if(member.data.customFields["account-type"]=="company") {
+             //	$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
+               window.location.href="/dashboards/dashboard"
+          } else if(member.data.customFields["account-type"]=="individual") {
+              //$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
+              window.location.href="/dashboards/dashboard"
+          } else if(member.data.customFields["account-type"]=="professional") {
+            //  $("#nav-link-dashboard").attr("href", "/dashboards/dashboard-prof")
+              window.location.href="/dashboards/dashboard-prof"
+          } else {
+           
+          }
+      }
+      //firstname = member.data.customFields["first-name"]
+    //$("#user-firstname").text("Hi "+ firstname)	
+      $("#side-signup-1").hide()
+      verified = member.data.verified
+      $("#btn-signup-drawer-knob").text("Verify")
+      if(!verified) {
+        $("#wf-form--2").hide()
+        $("#verification").show()
+        $(this).css("display", "none")
+      }
+      // let currentPage =''
+      // if (typeof page === "undefined") {
+      //     currentPage = ''
+      // } else {
+      //   currentPage = page
+      // }
+      const pageOwner = document.querySelector('[data-page-owner]')
+      if(pageOwner) {
+         if(verified || currentPage.value == "dashboard") {
+          $("#btn-drawer-signup-side").hide()
+          } else if(verified || pageOwner.value == "professional") {
+              if(fullNameInput.value && $("#professional-profile-fullname")) {
+              $("#professional-profile-fullname").val(fullNameInput.value)
+            }
+          }
+      }
+     
+    } else {
+      $("#btn-drawer-signup-side").show()
+      sessionStorage.clear()
+    }
+    
+    })
+    
+    
+    })
+    /*
+    if(sessionStorage.getItem("account-type") == "company") {
+        console.log("im in company condition")
+        $("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
+    } else if(sessionStorage.getItem("account-type") == "individual") {
+        $("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
+    } else if(sessionStorage.getItem("account-type") == "professional") {
+        $("#nav-link-dashboard").attr("href", "/dashboards/dashboard-prof")
+    } else {
+        $("#nav-link-dashboard").hide()
+    }
+    */
+     
+    
+    function getUserId() {
+      //sessionStorage.getItem("user_account_id"), "UAID"
+        const user_account_idInput = document.querySelector('[data-user_account_id]')
+        const emailInput = document.querySelector('[data-email]')
+        const pageOwner = document.querySelector('[data-page-owner]')
+        if(user_account_idInput) {
+          if(user_account_idInput.value) {
+            console.log("user_account_id is good ",user_account_idInput.value )
+          } else {
+            console.log("user_account_id is created but value null")
+            console.log(sessionStorage.getItem("user_account_id"), "UAID null")
+            if(emailInput.value) {
+              const tableReference = pageOwner.value=="professional" ? "119373" : pageOwner.value==="employer" ? "116205" : null
+              const fieldReference = pageOwner.value=="professional" ? "field_760997" : pageOwner.value==="employer" ? "field_738184" : null
+              if(tableReference !== null) {
+                  fetchData("https://api.baserow.io/api/database/rows/table/"+tableReference+"/?filter__"+fieldReference+"__equal="+emailInput.value).then(value=>{     
+                  //sessionStorage.setItem("user_account_id", value.data.results[0].id)
+                  user_account_idInput.value = value.data.results[0].id
+                })
+              }
+            }
+          }
+        } else {
+          console.log("user_account_id input not created")
+        }
+
+        console.log(user_account_idInput.value)
+        
+    }
+     $(document).ready(function(){
+        //   $("#post-job-success").css("display", "none")
+        
+        // getUserId()
+        //     correctCorrectPlan()
+        
+      })
+    </script>

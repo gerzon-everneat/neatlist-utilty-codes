@@ -1,0 +1,93 @@
+<script>
+ 
+    function correctCorrectPlan(){
+     window.$memberstackDom.getCurrentMember().then(async (member) => {
+        try {
+       
+        const plan = member.data.planConnections
+    
+          if(plan.length > 0) {
+            let credits  = "0"
+            let invites = "0"
+            let basic = "0"
+            let pro = "0"
+            let premium = "0"
+            let planIsNotSet = false
+            //$(".paj-plans-wrapper").show()
+            const basicPlan = member.data.customFields["basic"] || 0
+            const proPlan = member.data.customFields["pro"] || 0
+            const premiumPlan = member.data.customFields["premium"] || 0
+            console.log(member.data.customFields["invites"], member.data.customFields["credits"], member.data.customFields["premium"])
+                      console.log("plan id ", plan[0].planId, basicPlan, proPlan, premiumPlan)
+            if(plan[0].planId === "pln_basic-plan-272t50jfl") {
+               
+                if(basicPlan==0) {
+                 //updatePlanSetup( "3", "50", "1", "0", "0") // function in the header embbed element
+                  planIsNotSet  = true
+                  credits  = "3"
+                  invites = "50"
+                  basic = "1"
+                  pro = "0"
+                  premium = "0"
+                }
+            } else if(plan[0].planId === "pln_pro-plan-oq2t60jjw") {
+                    console.log("plan id this houd happen ", plan[0].planId)
+                 if(proPlan==0) {
+                  //updatePlanSetup( "10", "100", "0", "1", "0")
+                  planIsNotSet  = true
+                  credits  = "10"
+                  invites = "100"
+                  basic = "0"
+                  pro = "1"
+                  premium = "0"
+                }
+            } else if(plan[0].planId === "pln_premium-plan-q74dn0j8b") {
+                              
+                 if(premiumPlan==0) {
+                  //updatePlanSetup( "0", "0", "0", "0", "1") 
+                  planIsNotSet  = true
+                  credits  = "0"
+                  invites = "0"
+                  basic = "0"
+                  pro = "0"
+                  premium = "1"
+                }
+            }
+            console.log(planIsNotSet, "set?", credits, invites, basic, pro, premium )
+            if(planIsNotSet) {
+              await window.$memberstackDom.updateMember({ 
+                customFields: { 
+                  credits : credits, 
+                  invites : invites,
+                  basic : basic,
+                  pro : pro,
+                  premium : premium
+                }
+              }).then(() => {
+                alert("Acquired "+credits+" credits and "+invites+" invites!")
+              }).catch((err) => {
+                console.log("Error updating credits:", err);
+              });
+            }
+    
+          } else {
+            await window.$memberstackDom.updateMember({ 
+                customFields: { 
+                  credits : "0", 
+                  invites : "0",
+                  basic : "0",
+                  pro : "0",
+                  premium : "0"
+                }
+              }).then(() => {
+                //alert("Acquired "+ 0 +" credits and "+ 0 +" invites!")
+              }).catch((err) => {
+                console.log("Error updating credits:", err);
+              });
+          }
+        } catch (error) {
+          console.log("no plan")
+        }
+      })
+   }
+    </script>

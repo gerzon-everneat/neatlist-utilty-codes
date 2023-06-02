@@ -1,0 +1,284 @@
+<script src="https://uploads-ssl.webflow.com/62a1fe4a88d6da5f8b5232b4/62d4fe8d6105de195f48363a_airtable.browser.txt" type="text/javascript"></script>
+<style>
+	#example {
+  	padding-top : 60px;
+  }
+  a {
+  	text-decoration : none;
+  }
+</style>
+<script src="neatlist.js"></script>
+<script>
+
+$("#nav-link-dashboard-pro").hide()
+$("#nav-link-dashboard").hide()
+    
+var token = "RXu4QwYFcshkvXqFko7osvCIX09zc7g9"
+function toTitleCase(str) {
+  return str.replace(/(?:^|\s)\w/g, function(match) {
+      return match.toUpperCase();
+  });
+}
+function getKeyByValue(object, value) {
+  for (const key in object) {
+    if (object.hasOwnProperty(key) && object[key] === value && object.propertyIsEnumerable(key)) {
+      return key;
+    }
+  }
+  return undefined;
+}
+
+function truncateName(fullName) {
+  let names = fullName.split(" ");
+  if (names.length === 1) {
+    return fullName;
+  }
+  let firstName = names[0];
+  let lastNameInitial = names[1][0];
+  return firstName + " " + lastNameInitial + ".";
+}
+function toShortDate(dateString) {
+  if (!dateString) {
+    return "mm/dd/yyyy";
+  }
+  let date = new Date(dateString);
+  let month = (date.getMonth() + 1).toString().padStart(2, "0");
+  let day = date.getDate().toString().padStart(2, "0");
+  let year = date.getFullYear();
+  return `${month}/${day}/${year}`;
+}
+
+function getInitials(names) {
+	const name = names.split(" ");
+  if(name.length < 2) {
+  	return names[0].toUpperCase();
+  }
+  return (name[0].charAt(0)+name[1].charAt(0)).toUpperCase()
+}
+
+function month_date_yyyy(date) { //August 24, 2023
+  const options = { month: 'long', day: 'numeric', year: 'numeric' };
+  const formatter = new Intl.DateTimeFormat('en-US', options);
+  return formatter.format(date);
+}
+ async function fetchData(url)
+  {
+    try{
+      const response = await axios({
+        method: "GET",
+        url: url,
+        headers: {
+          Authorization: "Token "+neatlistB.key
+        }
+      })
+      return response
+    }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+  }
+ /*
+function getCreditsForMember(member) {
+    let plans =  member.data.planConnections.length || 0
+      if(plans > 0) {
+         let currentPlan
+         let credits = 0
+        $.each(member.data.planConnections, (index, plan)=>{
+            currentPlan = plan.planId
+            if (currentPlan === "Unlimited Plan") {
+              return "Unlimited";
+              } else if (currentPlan == "pln_basic-plan-272t50jfl") {
+                credits += parseInt(member.data.customFields["basic-credits"] || 0)
+              } else if (currentPlan === "Pro Plan") {
+                credits += parseInt(member.data.customFields["pro-credits"] || 0)
+              } else {
+                return 0;
+              }
+          })
+       return credits
+      } else {
+        //console.log("No dont have a plan");
+      }
+}
+*/
+
+function invites() {
+window.$memberstackDom.getCurrentMember().then(async (member) => {
+	if (member.data) {
+    // get the member's current credits on the basic plan
+  	const currentInvites = member.data.customFields["invites"];
+	
+    if (currentInvites > 0) {
+    // deduct one credit from the current credits
+    
+    const newInvites = currentInvites - 1;
+    
+    // update the member's custom fields with the new credits
+    await window.$memberstackDom.updateMember({ 
+      customFields: {
+      "invites": newInvites 
+      }
+    }).then(() => {
+      console.log("invites Credits updated successfully!");
+       console.log("Invite sent! " + newInvites + " invites left")
+    }).catch((err) => {
+      console.log("Error updating invites credits:", err);
+    });
+  } else {
+   	$(".paj-modal-content").hide()
+  	$(".paj-modal-plan-content").show()
+    // handle case where the member has no more credits
+    console.log("Sorry, you have no more invites credits on your current plan.");
+  }
+  }
+})
+}
+//to header codes
+async function updateRowByRowId(tableId, rowId, datas) {
+  const response = await axios({
+  method: "PATCH",
+  url: "https://api.baserow.io/api/database/rows/table/"+tableId+"/"+rowId+"/?user_field_names=true",
+  headers: {
+    Authorization: "Token " + neatlistB.key,
+    "Content-Type": "application/json"
+  },
+  data : datas
+ /* data: {
+    "post_status": object.value
+  } */
+	})
+}
+async function add(data, table, token) {
+	try {
+    const response =  await axios({
+    method: "POST",
+    url: "https://api.baserow.io/api/database/rows/table/"+table+"/",
+     headers: {
+        Authorization: "Token "+ token,
+        "Content-Type": "application/json"
+      }, data : data
+    })
+  return response;
+  }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+}
+
+async function deleteData(table, rowId, token) {
+	try {
+  	const response = await axios({
+      method: "DELETE",
+      url: "https://api.baserow.io/api/database/rows/table/"+table+"/"+rowId+"/",
+      headers: {
+        Authorization: "Token "+token,
+        "Content-Type": "application/json"
+      }
+    })
+    return response
+  }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+}
+ async function uploadFile(file_data) {
+ 		
+    try {
+    let formData = new FormData(); // Creating object of FormData class
+    formData.append("file", file_data)
+    console.log([...formData])
+    const response = await axios.post('https://api.baserow.io/api/user-files/upload-file/', formData, {
+      headers: {
+        Authorization: "Token " + neatlistB.key,
+        "Content-Type": "multipart/form-data",
+      }
+    });
+    return response
+    } catch(err) {
+    	console.log(err, "error on uploading...")
+    }
+
+}
+function validateInputsByColor(inputs) {
+  let emptyInputs = 0;
+  for (var i = 0; i < inputs.length; i++) {
+    const inputElement = inputs[i];
+    const containerElement = $(inputElement).closest(".container");
+    inputElement.classList.remove("error");
+    if (inputElement.value === "") {
+      inputElement.classList.add("error");
+      emptyInputs++;
+    }
+  }
+  return emptyInputs;
+}
+
+function getDistanceFromLatLonInMiles(lat1, lon1, lat2, lon2) {
+  const earthRadius = 3959; // Radius of the earth in miles
+  const dLat = deg2rad(lat2 - lat1);
+  const dLon = deg2rad(lon2 - lon1); 
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+    Math.sin(dLon / 2) * Math.sin(dLon / 2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); 
+  const distance = earthRadius * c; // Distance in miles
+  return distance;
+}
+
+function deg2rad(deg) {
+  return deg * (Math.PI/180)
+}
+/*
+function validateInputsByColor(inputs) {
+  	let invalid = 0
+    console.log(inputs.length)
+    //var containerElement = $("#input").parents(".container");
+ 
+    for (var i = 0; i < inputs.length; i++) {
+    		  const inputContainer = $(inputs[i]).closest(".professional-create-profile-input");
+         //inputContainer.find(".professional-create-profile-label").removeClass("isempty")
+       	 inputs[i].classList.remove("isempty")
+    	if(inputs[i].value === '' ){
+          inputs[i].classList.add("isempty")
+         	//inputContainer.find(".professional-create-profile-label").addClass("isempty")
+      }
+    }
+    return invalid
+}*/
+var default_picture = "https://uploads-ssl.webflow.com/62a1fe4a88d6da5f8b5232b4/62a1fe4a88d6da7be6523325_icon-1-post-job-job-board-x-template.svg"
+
+</script>

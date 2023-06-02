@@ -1,0 +1,94 @@
+<script>
+    //console.log(sessionStorage.getItem("email"))
+    async function getInvites(){
+      //table chat 118032
+      //fld_user_one field_751723
+      //fld_user_two field_751724 https://api.baserow.io/api/database/rows/table/
+      table_id = 118032
+      //const url1 = `https://api.baserow.io/v2/grid/118032/rows/?field_751723=${sessionStorage.getItem("email")}`
+      //const filterByEmail = `filter__${jobPostUserAccRelFld}__link_row_contains=`+ sessionStorage.getItem("email")
+      const url1 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751723__equal=${sessionStorage.getItem("email")}&filter__field_957840__not_empty`
+      const url2 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751724__equal=${sessionStorage.getItem("email")}&filter__field_957840__not_empty`
+    
+      const results1 = await fetch(url1, 
+        {
+          headers: {
+          Authorization: `Token ${neatlistB.key}`
+        }
+        }).then(res => res.json());
+    
+        const results2 = await fetch(url2,
+        {
+          headers: {
+          Authorization: `Token ${neatlistB.key}`
+        }
+      }).then(res => res.json());
+        //console.log(results1, results2, "ano eni?")
+        const combinedResults = [...results1.results, ...results2.results].reduce((unique, item) => {
+        return unique.find(i => i.id === item.id)
+          ? unique
+              : [...unique, item];
+          }, []);
+        //console.log(combinedResults.length)
+        if(combinedResults.length > 0){
+        checkResponse(combinedResults)
+      }
+    }
+    
+    getInvites()
+    function checkResponse(raw_messages) {
+    console.log(raw_messages, "callingg with raw messages");
+      $(".messages-grid").empty()
+      let returnInviteCount = 0
+      $.each(raw_messages, (key, message)=>{
+        let dateCreated =  new Date(message.field_751725)
+        let exp_date = new Date(message.field_751725)
+    
+        exp_date.setDate(dateCreated.getDate() + 7)
+       // console.log(date, "expires on ", exp_date, "exp")
+    
+        const today = new Date();
+    
+        if(exp_date < today && message.field_784869.length == 1){
+          returnInviteCount += 1
+          console.log('The expiration date is in the past');
+        }
+      })
+      console.log(returnInviteCount, "invites need to return")
+      if(returnInviteCount > 0) {
+        returnInvite(returnInviteCount)
+      }
+    }
+    function returnInvite(returnInviteCount) {
+     window.$memberstackDom.getCurrentMember().then(async (member) => {
+        if (member.data) {
+            console.log(member, "member data", member.data)
+          // get the member's current credits on the basic plan
+         //const currentBasicCredits = member.data.customFields["basic-credits"];
+                 const currentInvites = member.data.customFields["invites"] || 0
+           console.log(currentInvites, "current invites",returnInviteCount )
+          // deduct one credit from the current credits
+          //const newBasicCredits = parseInt(currentBasicCredits) + parseInt($(this).attr("plan-credits"))
+          const newInvites = parseInt(currentInvites) + returnInviteCount
+          // update the member's custom fields with the new credits
+          await window.$memberstackDom.updateMember({ 
+            customFields: { 
+                invites : newInvites
+            }
+          }).then(() => {
+              alert(returnInviteCount+ "invitation credits has beed added back due to no response within the given amount of time")
+            const datas = {
+                "isActive": false
+            }
+            const tableId = "118032"
+            updateRowByRowId(tableId, 21, datas)
+          }).catch((err) => {
+            console.log("Error updating credits:", err);
+          });
+         
+        }
+      })
+     }
+    
+    
+    </script>

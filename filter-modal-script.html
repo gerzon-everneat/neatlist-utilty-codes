@@ -1,0 +1,157 @@
+<script>
+    var filters = new Set()
+    
+     function applyFilters() {
+  /*
+      table.rows().every(function() {
+       var row = this.data();
+       let skipFirstRow = true
+       var rowVisible = false;
+       if (filters.size === 0) {
+           rowVisible = true;
+       } else {
+       for (var key in row) {
+           if (row.hasOwnProperty(key)) {
+            if (key === "0") { // skip the first td element of each row
+                continue; // skip the rest of the loop for the first td
+              }
+               for (var j = 0; j < filters.size; j++) {
+                   if (row[key].toString().toLowerCase().indexOf(Array.from(filters)[j].toLowerCase()) !== -1) {
+                       rowVisible = true;
+                       break;
+                   }
+               }
+           }
+          if (rowVisible) break;
+       }
+     }
+         this.node().style.display = rowVisible ? 'table-row' : 'none';
+     });
+   */
+  //var filters = new Set($('#filterInput').val().toLowerCase().split(' '));
+    table.rows().every(function() {
+      var row = this.data();
+      let skipFirstRow = true
+      var rowVisible = false;
+      if (filters.size === 0) {
+        rowVisible = true;
+      } else {
+        for (var key in row) {
+          if (row.hasOwnProperty(key)) {
+            if (key === "0") { // skip the first td element of each row
+              continue; // skip the rest of the loop for the first td
+            }
+            for (var j = 0; j < filters.size; j++) {
+              if (row[key].toString().toLowerCase().indexOf(Array.from(filters)[j].toLowerCase()) !== -1) {
+                rowVisible = true;
+                break;
+              }
+            }
+          }
+          if (rowVisible) break;
+        }
+      }
+      var node = this.node();
+      if (rowVisible) {
+        $(node).show();
+      } else {
+        $(node).hide();
+      }
+    });
+   }
+     $(document).ready(function(){
+     var tableaname = ''
+       $(document).on("click",'.filter-badge', function(){
+         var temp_detail = $(this).attr('data-value')
+         filters.delete($(this).attr("data-remove"))
+         $('.filter-badge[data-value="'+temp_detail+'"]').remove()
+         $('.post-status-content.'+temp_detail.toLowerCase()).find(".default-text-style").removeAttr("style").removeAttr("style")
+         $('.post-status-content.'+temp_detail.toLowerCase()).attr("clicked", "0")
+         applyFilters()
+       })
+     var selectedValue = "" 
+      $(document).on('change','.filter-input-dropdown',function(){
+          selectedValue = selectedValue.concat(" "+ $(this).val())
+          var filter_text
+          if($(this).val() != "" ){
+             filters.add($(this).val())
+             applyFilters()
+             filter_text = $(this).children("option:selected").text()
+             /* check if filter already exist */
+             if($('.filter-badge[data-value="'+filter_text+'"]').length > 0){
+              $(this).val("").change()
+               return false;
+             }
+            var filter_text_badge =`<div class="button-primary custom-search filter-badge" data-value="${filter_text}" data-remove = "${$(this).val()}"><span class="badge-text" >${filter_text}</span> <span class="text-span-7">x</span></div>`
+          //   $('.filter-badge-content.'+$(this).attr("data-id")).append(filter_text_badge)
+             $("#grid-chips").append(filter_text_badge)
+            $(this).val("").change()
+         } else {
+           filter_text = ""
+           selectedValue = ""
+         }
+     })
+   $(document).on("click",".post-status-content", function(){
+     if($(this).attr("clicked") == 0) {
+        $(this).find(".default-text-style").css("font-weight", "700")
+       $(this).attr("clicked", "1")
+       filters.add($(this).attr("job-status"))
+       const filter_text_badge_status =`<div class="button-primary custom-search filter-badge" data-value="${$(this).attr("job-status")}" data-remove = "${$(this).attr("job-status")}"><span class="badge-text" >${$(this).attr("job-status")}</span> <span class="text-span-7">x</span></div>`
+      $("#grid-chips").append(filter_text_badge_status)
+        console.log("filter added..")
+       //add to filters
+     } else {
+       $(this).attr("clicked", "0")
+       $(this).find(".default-text-style").removeAttr("style")
+       filters.delete($(this).attr("job-status"))
+       $('.filter-badge[data-value="'+$(this).attr("job-status")+'"]').remove()
+       //remove in filters
+     }
+     applyFilters()
+   })
+   $(".checkbox-filter-container.sort").on("click", function(){
+     $('.checkbox-filter-modal.sort').prop('checked', false);
+     $(this).find('.checkbox-filter-modal.sort').prop('checked', true);
+   })
+   
+   $(".checkbox-filter-container.order").on("click", function(){
+     $('.checkbox-filter-modal.order').prop('checked', false);
+     $(this).find('.checkbox-filter-modal.order').prop('checked', true);
+   })
+   var columnIndexToFilter = 1
+   var order = "asc"
+   $(document).ready(function(){
+     applySort()
+   })
+   $(".checkbox-filter-container.sort").on("click", function(){
+   let sortby = $(this).attr("sort-by")
+   if(sortby=="job-title") {
+      columnIndexToFilter = 1
+      applySort()
+   } else if(sortby=="num-applicants") {
+      columnIndexToFilter = 5
+      applySort()
+   } else if(sortby=="post-date") {
+      columnIndexToFilter = 4
+      applySort()
+   } else if(sortby=="num-hires") {
+      columnIndexToFilter = 6
+      applySort()
+   }
+   })
+    
+   $(".checkbox-filter-container.order").on("click", function(){
+     order = $(this).attr("order")
+     applySort()
+   })
+    function applySort() {
+      table.order([columnIndexToFilter, order]).draw();
+    }
+   // Sort dataTable by column in ascending order
+   //dataTable.sort([{column: column_index, desc: false}]);
+   
+   // Sort dataTable by column in descending order
+   //dataTable.sort([{column: column_index, desc: true}]);
+   
+  })// document ready
+   </script>
