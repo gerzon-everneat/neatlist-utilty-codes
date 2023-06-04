@@ -1,0 +1,30 @@
+<script>
+    function getUserId() {
+      //sessionStorage.getItem("user_account_id"), "UAID"
+        const user_account_idInput = document.querySelector('[data-user_account_id]')
+        const emailInput = document.querySelector('[data-email]')
+        const pageOwner = document.querySelector('[data-page-owner]')
+        if(user_account_idInput) {
+          if(user_account_idInput.value) {
+            console.log("user_account_id is good ",user_account_idInput.value )
+          }
+        } else {
+          console.log("user_account_id input not created. creating now...")
+          if(emailInput.value) {
+              const tableReference = pageOwner.value=="professional" ? "119373" : pageOwner.value==="employer" ? "116205" : null
+              const fieldReference = pageOwner.value=="professional" ? "field_760997" : pageOwner.value==="employer" ? "field_738184" : null
+              if(tableReference !== null) {
+              		console.log("fetching...")
+                  fetchData("https://api.baserow.io/api/database/rows/table/"+tableReference+"/?filter__"+fieldReference+"__equal="+emailInput.value).then(value=>{     
+                  //sessionStorage.setItem("user_account_id", value.data.results[0].id)
+                  user_account_idInput.value = value.data.results[0].id
+                })
+              }
+            }
+        }
+
+        console.log(user_account_idInput.value)
+        
+    }
+
+</script>
