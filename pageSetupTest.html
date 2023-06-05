@@ -1,262 +1,82 @@
 <script>
-  var neatlistB = {};
-  
-  Object.defineProperty(neatlistB, 'key', {
-    value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
-    enumerable: false,
-  });
-  
-  //oVWY0mLrLcKkycPh1czPqraJzcu3Yh13
-  //raZf3tYSdyeJU3mUiLQwVvtY3f06d6tH
-  //h4iR9uofbER0jrqM7QtrgXYvSf9N9oMf
-  //4OLFgRaNmDsZGkh59E53LasHVXx73p9Q
-      function getUserId() {
-        //sessionStorage.getItem("user_account_id"), "UAID"
-          const inputUAID = $("<input type='hidden' data-user_account_id>");
-          const user_account_idInput = document.querySelector('[data-user_account_id]')
-          const emailInput = document.querySelector('[data-email]')
-          const accountType = document.querySelector('[data-account-type]')
-          if(user_account_idInput) {
-            if(user_account_idInput.value) {
-              console.log("user_account_id is good ",user_account_idInput.value )
+  var objectRegistrar = new Map()
+   class Employer {
+        constructor(accountDetails) {
+            this.accountDetails = accountDetails;
+            this.account_type = document.querySelector('[data-account-type]').value;
+        }
+        //generate the getter for the account_id, email, account_type, fullName, pageOwner, sessioned now
+        _accountDetails() {
+            return {
+              id : this.accountDetails.id, 
+              email : this.accountDetails.field_738184,
+              fullname : this.accountDetails.field_738186,
+              company_name : this.accountDetails.field_738188,
+              fld_about_company: this.accountDetails.field_738190,
+              website : this.accountDetails.field_738191, 
+              facebook :  this.accountDetails.field_738192,
+              phone : this.accountDetails.field_738193,
+              logo : this.accountDetails.field_738194,
+              address : this.accountDetails.field_738195,
+              lat : this.accountDetails.field_738196,
+              lng : this.accountDetails.field_738197,
+              company_size : this.accountDetails.field_738198,
+              chats : this.accountDetails.field_751749,
+              posts : this.accountDetails.field_884919,
+              applicants : this.accountDetails.field_1007786,
+              hired : this.accountDetails.field_1020482,
+              invited : this.accountDetails.field_1020580
             }
-          } else {
-            console.log("user_account_id input not created. creating now...")
-            if(emailInput.value) {
-                // const tableReference = accountType.value=="professional" ? "119373" : accountType.value==="company" || accountType.value==="individual" ? "116205" : null
-                // const fieldReference = accountType.value=="professional" ? "field_760997" : accountType.value==="company" || accountType.value==="individual" ? "field_738184" : null
-                const tableReference =  "116205"
-                const fieldReference =  "field_738184"
-                if(tableReference !== null) {
-                    console.log("fetching...")
-                    fetchData("https://api.baserow.io/api/database/rows/table/"+tableReference+"/?filter__"+fieldReference+"__equal="+emailInput.value).then(value=>{     
-                    //sessionStorage.setItem("user_account_id", value.data.results[0].id)
-                    console.log(value.data.results[0], "test")
-                      const employer  = new Employer(value.data.results[0]);
-                      
-                      console.log(employer._candidates())
-                  })
+        } 
+        _account_type() {
+            return this.account_type;
+        }
+        _candidates(pageNumber, numRows) {
+        return new Promise((resolve, reject) => {
+          let candidates = []
+          const page = 1
+          const size = 2
+          fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ this.accountDetails.id + "&page="+pageNumber+"&size="+numRows).then(value =>{
+             $.each(value.data.results, function(key, candidate){
+                const dateTime = new Date(candidate.field_751776)
+                const timeOnly = dateTime.toLocaleTimeString()
+                const dateOnly =  dateTime.toLocaleDateString()
+                var candidate= {
+                  id					: candidate.id,
+                  dateOnly : dateOnly,
+                  timeOnly : timeOnly,
+                  title 			: candidate.field_1026493[0].value,
+                  professional_id  : candidate.field_768138[0].id,
+                  name  			: candidate.field_768139[0].value,
+                  //initials : getInitials(candidate.field_768139[0].value),
+                  email       : candidate.field_751967,
+                  location  	: candidate.field_768140[0].value +", "+candidate.field_845523[0].value,
+                  experience  : candidate.field_845525[0].value,
+                  type				: candidate.field_1024105[0].value,
+                  dateapplied : dateOnly,
+                  picurl  		: candidate.field_845539[0].value || default_picture,
+                  applicationStatus : candidate.field_826075.value,
+                  verified : candidate.field_1024367[0].value.value,
+                  verifiedIcon : candidate.field_1024367[0].value.value == "Verified" ? "https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6442beb8a200b03c7bca5fae_Circle%20Check.svg" : "",
+                  language : candidate.field_1026501[0].value,
+                  english_level : candidate.field_1053047[0].value.value,
+                  position : candidate.field_1026500[0].value,
+                  trade : candidate.field_1026502[0].value,
+                  skills : candidate.field_1026503[0].value,
+                  stage : candidate.field_826075.value
+                   
                 }
-              }
-          }
-      }
-  class Employer {
-      constructor(accountDetails) {
-          this.accountDetails = accountDetails;
-          this.account_type = document.querySelector('[data-account-type]').value;
-      }
-      //generate the getter for the account_id, email, account_type, fullName, pageOwner, sessioned now
-      _accountDetails() {
-          return {
-            id : this.accountDetails.id, 
-            email : this.accountDetails.field_738184,
-            fullname : this.accountDetails.field_738186,
-            company_name : this.accountDetails.field_738188,
-            fld_about_company: this.accountDetails.field_738190,
-            website : this.accountDetails.field_738191, 
-            facebook :  this.accountDetails.field_738192,
-            phone : this.accountDetails.field_738193,
-            logo : this.accountDetails.field_738194,
-            address : this.accountDetails.field_738195,
-            lat : this.accountDetails.field_738196,
-            lng : this.accountDetails.field_738197,
-            company_size : this.accountDetails.field_738198,
-            chats : this.accountDetails.field_751749,
-            posts : this.accountDetails.field_884919,
-            applicants : this.accountDetails.field_1007786,
-            hired : this.accountDetails.field_1020482,
-            invited : this.accountDetails.field_1020580
-          }
-      } 
-      _account_type() {
-          return this.account_type;
-      }
-      _candidates(pageNumber, numRows) {
-        let candidates = []
-        fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ this.accountDetails.id + "&page="+pageNumber+"&size="+numRows).then(value =>{
-           $.each(value.data.results, function(key, candidate){
-              const dateTime = new Date(candidate.field_751776)
-              const timeOnly = dateTime.toLocaleTimeString()
-              const dateOnly =  dateTime.toLocaleDateString()
-              var candidate= {
-              	id					: candidate.id,
-                dateOnly : dateOnly,
-                timeOnly : timeOnly,
-                title 			: candidate.field_1026493[0].value,
-                professional_id  : candidate.field_768138[0].id,
-                name  			: candidate.field_768139[0].value,
-                initials : getInitials(candidate.field_768139[0].value),
-                email       : candidate.field_751967,
-                location  	: candidate.field_768140[0].value +", "+candidate.field_845523[0].value,
-                experience  : candidate.field_845525[0].value,
-                type				: candidate.field_1024105[0].value,
-                dateapplied : dateOnly,
-                picurl  		: candidate.field_845539[0].value || default_picture,
-                applicationStatus : candidate.field_826075.value,
-                verified : candidate.field_1024367[0].value.value,
-                verifiedIcon : candidate.field_1024367[0].value.value == "Verified" ? "https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6442beb8a200b03c7bca5fae_Circle%20Check.svg" : "",
-                language : candidate.field_1026501[0].value,
-                english_level : candidate.field_1053047[0].value.value,
-                position : candidate.field_1026500[0].value,
-                trade : candidate.field_1026502[0].value,
-                skills : candidate.field_1026503[0].value,
-                stage : candidate.field_826075.value
-             		
-              }
-              candidates.push(candidate)
+                candidates.push(candidate)
+              })
+               resolve(candidates);
             })
-            return candidates;
-        })
-      }
-  }
-  class UserJobPosts {
-    constructor(userAccount, jobPosts) {
-    this.userAccount = userAccount
-    this.jobPosts = jobPosts
+            .catch(error => {
+              reject(error); // Reject the promise if an error occurs
+            });
+          })
+        }
+        _chats() {
+          
+        }
     }
-    _allPosts() {
-      
-    }
-    
-  }
   </script>
-  
-  
-  afsdf
-  <div data-page-setup>
-   <input type = "text" value = 'test'>
-  </div> 
-   
-    
-  
-  <script>
-    
-      //@field_760997 is user_email in accountprofile
-      
-      $(document).ready(function(){
-      $("[data-page-setup]").empty();
-   
-   
-      const inputSession = $("<input type='hidden' data-sessioned value='true'>");
-      const inputEmail = $("<input type='hidden' data-email>");
-      const inputAccountType = $("<input type='hidden' data-account-type>");
-      const inputFullName = $("<input type='hidden' data-fullname>");
-      const inputCurrentPage = $("<input type='hidden' data-current-page>");
-  
-      $("#professional-profile-email").attr("readonly",true)
-      $("#professional-profile-fullname").attr("readonly",true)
-      $("#professional-profile-phone").attr("readonly",true)
-      var verified;
-      
-      window.$memberstackDom.getCurrentMember().then((member) => {
-      if (member.data) {
-        $("[data-page-setup]").append(inputSession)
-  
-        //let getCredits = getCreditsForMember(member)
-        
-        //sessionStorage.setItem("fullName", member.data.customFields["first-name"] + " " + member.data.customFields["last-name"])
-        const fullNameValue = member.data.customFields["first-name"] + " " + member.data.customFields["last-name"]
-        inputFullName.val(fullNameValue);
-        $("[data-page-setup]").append(inputFullName)
-         inputEmail.val(member.data.auth.email)
-        $("[data-page-setup]").append(inputEmail)
-        
-        
-        
-        inputAccountType.val(member.data.customFields["account-type"]);
-        $("[data-page-setup]").append(inputAccountType)
-  
-        //$("#create-profile-full-name").val(sessionStorage.getItem("fullName"))
-        $("#create-profile-full-name").val(fullNameValue)
-          if(inputAccountType.val()=="company") {
-            $("#nav-link-dashboard-pro").hide()
-            $("#nav-link-dashboard").show()
-            
-            //$("#nav-link-dashboard").attr("href", "https://www.neatlist.co/dashboards/dashboard")
-            // window.location.href="/dashboards/dashboard"
-          } else if(inputAccountType.val()=="individual") {
-            $("#nav-link-dashboard-pro").hide()
-            $("#nav-link-dashboard").show()
-            //$("#nav-link-dashboard").attr("href", "https://www.neatlist.co/dashboards/dashboard")
-            //window.location.href="/dashboards/dashboard"
-          } else if(inputAccountType.val()=="professional") {
-            $("#nav-link-dashboard-pro").show()
-            $("#nav-link-dashboard").hide()
-            //window.location.href="/dashboards/dashboard-prof"
-          } else {
-            console.log("no account-type")
-          }
-            if(!localStorage.getItem("sessioned")) {
-              //if(!document.querySelector('[data-sessioned]')) {
-            localStorage.setItem("sessioned", true)
-            
-            //sessionStorage.setItem("email", member.data.auth.email)
-            //document.querySelector('[data-email]').value = member.data.auth.email
-            inputEmail.val(member.data.auth.email);
-            $("[data-page-setup]").append(inputEmail);
-            //sessionStorage.setItem("account-type", member.data.customFields["account-type"])
-            
-            //window.location.href="/home"
-            if(inputAccountType.val()=="company") {
-               //	$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
-                 window.location.href="/dashboards/dashboard"
-            } else if(inputAccountType.val()=="individual") {
-                //$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
-                window.location.href="/dashboards/dashboard"
-            } else if(inputAccountType.val()=="professional") {
-              //  $("#nav-link-dashboard").attr("href", "/dashboards/dashboard-prof")
-                window.location.href="/dashboards/dashboard-prof"
-            } else {
-             
-            }
-        }
-        //firstname = member.data.customFields["first-name"]
-        //$("#user-firstname").text("Hi "+ firstname)	
-        $("#side-signup-1").hide()
-        verified = member.data.verified
-        $("#btn-signup-drawer-knob").text("Verify")
-        if(!verified) {
-          $("#wf-form--2").hide()
-          $("#verification").show()
-          $(this).css("display", "none")
-        }
-        // let currentPage =''
-        // if (typeof page === "undefined") {
-        //     currentPage = ''
-        // } else {
-        //   currentPage = page
-        // }
-        
-        if(inputAccountType.val()) {
-           if(verified || inputCurrentPage.val() == "dashboard") {
-             $("#btn-drawer-signup-side").hide()
-           } else if(verified || inputAccountType.val() == "professional") {
-              if(inputFullName.val() && $("#professional-profile-fullname")) {
-                $("#professional-profile-fullname").val(inputFullName.val())
-              }
-            }
-          }
-      getUserId()
-      } else {
-        $("#btn-drawer-signup-side").show()
-        localStorage.clear()
-      }
-      })
-   })
-      /*
-      if(sessionStorage.getItem("account-type") == "company") {
-          console.log("im in company condition")
-          $("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
-      } else if(sessionStorage.getItem("account-type") == "individual") {
-          $("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
-      } else if(sessionStorage.getItem("account-type") == "professional") {
-          $("#nav-link-dashboard").attr("href", "/dashboards/dashboard-prof")
-      } else {
-          $("#nav-link-dashboard").hide()
-      }
-      */
-       
-      
-  
-  
-</script>

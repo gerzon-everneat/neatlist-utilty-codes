@@ -1,0 +1,269 @@
+<script>
+
+    var table_id;
+    
+    var headers = {
+      "Content-Type": "application/json",
+      "Authorization": "Token " + token
+    };
+    // Define the query.
+    
+    $(document).ready(function(){
+    $(".messages-grid").empty()
+    $(".grid-new-message-inbox").empty()
+    $(document).find("#invitation-response").hide()
+    
+    async function MyInbox(){
+    //table chat 118032
+    //fld_user_one field_751723
+    //fld_user_two field_751724 https://api.baserow.io/api/database/rows/table/
+    table_id = 118032
+        //const url1 = `https://api.baserow.io/v2/grid/118032/rows/?field_751723=${sessionStorage.getItem("email")}`
+      //const filterByEmail = `filter__${jobPostUserAccRelFld}__link_row_contains=`+ sessionStorage.getItem("email")
+      const url1 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751723__equal=${sessionStorage.getItem("email")}`
+       const url2 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751724__equal=${sessionStorage.getItem("email")}`
+     
+      const results1 = await fetch(url1, 
+     {
+      headers: {
+        Authorization: `Token ${token}`
+      }
+    }).then(res => res.json());
+    
+      const results2 = await fetch(url2,
+      {
+      headers: {
+        Authorization: `Token ${token}`
+      }
+    }).then(res => res.json());
+    console.log(results1, results2, "ano eni?")
+      const combinedResults = [...results1.results, ...results2.results].reduce((unique, item) => {
+        return unique.find(i => i.id === item.id)
+          ? unique
+          : [...unique, item];
+      }, []);
+      if(combinedResults.length){
+          displayMessagesInbox(combinedResults)
+      }
+        
+      //console.log(combinedResults, "yahooo");
+      /*
+      const query = {
+        and: [
+          {
+            field_id: "field_751723",
+            operator: "=",
+            value: sessionStorage.getItem("email")
+          },
+          {
+            field_id: "field_751724",
+            operator: "=",
+            value: sessionStorage.getItem("email")
+          }
+        ]
+      };
+      fetch(endpoint, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(query)
+        })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data, "uwu");
+      })
+      .catch(error => {
+        console.log(error, "uwuwuu");
+      });
+      */
+    }
+    
+    MyInbox()
+    })
+    
+    function displayMessagesInbox(inboxs){
+        $(".grid-new-message-inbox").empty()
+        $.each(inboxs, (key, inbox)=>{
+          
+          let chatId = inbox.field_751705
+        receiver = inbox.field_751723 == sessionStorage.getItem("email") ? inbox.field_751724 : inbox.field_751723
+        let picUrl = sessionStorage.getItem("account-type")!="professional" ? inbox.field_751771[0].value : inbox.field_751770[0].value
+        //picUrl = picUrl ? picUrl : defaultPicture
+        console.log(inbox.field_751758, "hosw pics", inbox.field_751769)
+        let notMyName = sessionStorage.getItem("account-type")!="professional" ? inbox.field_751769[0].value : inbox.field_751758[0].value
+        let trade = "HouseKeeper"//sessionStorage.getItem("account-type")!="professional" ? inbox.field_751769 : inbox.field_751758
+       
+        
+        let dateTime = new Date(inbox.field_784870[0].value)
+        let shortDate = dateTime.toLocaleDateString()
+        
+           let professionalId = inbox.field_751756[0].id
+        let companyId = inbox.field_751748[0].id
+        let profilePageRefence = sessionStorage.getItem("account-type")!="professional" ? "view-profile?pro="+professionalId : "view-company?company="+companyId 
+        /**/
+           $(".grid-new-message-inbox").append(`
+        <a href="#" class="inbox-wrapper w-inline-block" onclick ="openConvo(${chatId},'${picUrl}', '${notMyName}','${trade}', '${profilePageRefence}')">
+        <div class="image-wrapper">
+        <img src="${picUrl}"
+        loading="lazy"
+        class="inbox-image"></div>
+        <div class="name-trade-wrapper">
+        <div class="owner-name-top"><h5 class="inbox-owner-header">${notMyName}</h5>
+        </div><div class="owner-trade-bottom">
+        <img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/62a1fe4a88d6da072e5232fc_icon-3-job-categories-job-board-x-template.svg"
+        loading="lazy" width="20" height="20" alt="Portfolio Icon - Job Board X Webflow Template"><div class="inbox-text-normal">${trade}</div>
+        </div></div>
+        <div class="date">
+        <div class="inbox-text-normal">${shortDate}</div></div></a>
+        `)
+        
+      })
+     
+    }
+    
+    async function openConvo(chatId, picUrl, notMyName, trade, profile_page_reference){
+    this.chatId = chatId
+    $("#inbox-owner-header").text(notMyName)
+    $("#inbox-text-normal").text(trade)
+    $("#inbox-image").attr("src", picUrl)
+    $("#inbox-image").attr("srcset", picUrl)
+    
+    $("#goto-profile").attr("href", "https://www.neatlist.co/"+profile_page_reference)
+    
+    
+    
+    
+    //field_751728	sender
+    //field_751729	receiver
+    //field_751730	created_at
+        console.log(chatId)
+      const url = `https://api.baserow.io/api/database/rows/table/118033/?filter__field_751726__	link_row_has=${chatId}`
+     
+      const results = await fetch(url, 
+       {
+        headers: {
+          Authorization: `Token ${token}`
+        }
+      }).then(res => res.json());
+        console.log(results)
+      if(results.count > 0){
+       displayMessages(results)
+      }
+     
+    }
+    
+    function displayMessages(raw_messages) {
+    let messages = raw_messages.results.sort((p1, p2) => (p1.id > p2.id) ? 1 : (p1.id < p2.id) ? -1 : 0);
+    console.log("messages sorted based on ascending order of their id")
+    console.log(messages);
+    
+        if(messages.length == 1){
+            $("#invitation-response").css("display", "flex")
+        }
+        $(".messages-grid").empty()
+      $.each(messages, (key, message)=>{
+      //field_751729 receiver
+      //field_751728 sender
+          
+        this.sender = message.field_751728
+    
+          let sender =  message.field_751728
+        let mine = sender == sessionStorage.getItem("email")
+          let Name = mine ? "You" : message.field_892228[0].value
+        let date =  new Date(message.field_751730)
+        const options = { weekday: 'long', hour: 'numeric', minute: 'numeric', hour12: true };
+        let dayTime = date.toLocaleString('en-US', options);
+        let messageText = message.field_751731
+        let mineOrNot = mine ? "" : "not-"
+        $(".invitation-text").val(messageText)
+        $(".messages-grid").append(`
+               <div id="w-node-_8dcf25fe-814e-2de8-0469-39cf8fd09a67-06e84186"
+             class="${mineOrNot}my-message">
+                <div class="message-header-convo w-row">
+                    <div class="w-col w-col-6">
+                        <h5 class="sender-receiver">${Name}</h5>
+                    </div>
+                    <div class="w-col w-col-6">
+                        <div class="date-time">${dayTime}</div>
+                    </div>
+                </div>
+                <div class="message-header-convo message-box not-my-message-box">
+                    <div class="${mineOrNot}my-message-text">${messageText}</div>
+                </div>
+             </div>
+        `)
+      })
+    }
+    function sent(){
+        if(chatId && sender && receiver && text) {
+              createMessage().then(value=>{
+          mineOrNot=""
+          Name = "You"
+          dayTime = "Now"
+               $(".messages-grid").append(`
+               <div id="w-node-_8dcf25fe-814e-2de8-0469-39cf8fd09a67-06e84186"
+             class="${mineOrNot}my-message">
+                <div class="message-header-convo w-row">
+                    <div class="w-col w-col-6">
+                        <h5 class="sender-receiver">${Name}</h5>
+                    </div>
+                    <div class="w-col w-col-6">
+                        <div class="date-time">${dayTime}</div>
+                    </div>
+                </div>
+                <div class="message-header-convo message-box not-my-message-box">
+                    <div class="${mineOrNot}my-message-text">${text}</div>
+                </div>
+             </div>
+        `)
+          })
+      }
+    }
+    
+    async function createMessage() {
+      const messagesTable = "118033/"
+      const response = await axios({
+        method: "POST",
+        url: `https://api.baserow.io/api/database/rows/table/118033/?user_field_names=true`,
+        headers: {
+          Authorization: "Token HsP3WGyUcjpqxLLQPdzhfNoZsVyavyd7",
+          "Content-Type": "application/json"
+        },
+        data: {
+          "chat_id": [chatId],
+          "sender": sessionStorage.getItem("email"),
+          "receiver" : receiver,
+          "text" : text
+        }
+      })
+      return response
+      }	
+      
+    
+    $("#btn-accept").on("click", function(){
+        $("#invitation-response").hide()
+      text = "I am interested"
+      sent()
+    })
+    $("#btn-reject").on("click", function(){
+        $("#invitation-response").hide()
+      text = "I am not available"
+      sent()
+    })
+    $(document).ready(()=>{
+        $("#btn_send_message").on("click", ()=>{
+            console.log("sending...")
+            if($("#my-text").val().trim()) {
+            console.log("sending... message")
+            text = $("#my-text").val()
+            createMessage().then((value)=>{
+                sent()
+                $(".convo-wrapper").scrollTop($(".convo-wrapper")[0].scrollHeight);
+            })
+        }
+      })
+        
+       $
+       
+    })
+    
+    </script>
