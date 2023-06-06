@@ -4,6 +4,7 @@
         constructor(accountDetails) {
             this.accountDetails = accountDetails;
             this.account_type = document.querySelector('[data-account-type]').value;
+            
         }
         //generate the getter for the account_id, email, account_type, fullName, pageOwner, sessioned now
         _accountDetails() {
@@ -31,12 +32,12 @@
         _account_type() {
             return this.account_type;
         }
-        _candidates(pageNumber, numRows) {
-        return new Promise((resolve, reject) => {
+       async _candidates(pageNumber, numRows) {
+        
           let candidates = []
           const page = 1
           const size = 2
-          fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ this.accountDetails.id + "&page="+pageNumber+"&size="+numRows).then(value =>{
+          await fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ this.accountDetails.id + "&page="+pageNumber+"&size="+numRows).then(value =>{
              $.each(value.data.results, function(key, candidate){
                 const dateTime = new Date(candidate.field_751776)
                 const timeOnly = dateTime.toLocaleTimeString()
@@ -68,38 +69,35 @@
                 }
                 candidates.push(candidate)
               })
-               resolve(candidates);
+               
             })
-            .catch(error => {
-              reject(error); // Reject the promise if an error occurs
-            });
-          })
+           
+        
         }
-        _inbox() {
-        return new Promise((resolve, reject) => {
-           table_id = 118032
-          //const url1 = `https://api.baserow.io/v2/grid/118032/rows/?field_751723=${sessionStorage.getItem("email")}`
-        //const filterByEmail = `filter__${jobPostUserAccRelFld}__link_row_contains=`+ sessionStorage.getItem("email")
-        const url1 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751723__equal=company2@test.com`
-         const url2 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751724__equal=company2@test.com`
+        async _inbox() {
        
-        const results1 =  fetch(url1, 
+          const table_id = 118032
+        //const url1 = `https://api.baserow.io/v2/grid/118032/rows/?field_751723=${sessionStorage.getItem("email")}`
+        //const filterByEmail = `filter__${jobPostUserAccRelFld}__link_row_contains=`+ sessionStorage.getItem("email")
+        const email = this._accountDetails().email
+        console.log(email, "_inbox")
+        const url1 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751723__equal=${email}`
+        const url2 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751724__equal=${email}`
+       
+        const results1 =  await fetch(url1, 
        {
         headers: {
           Authorization: `Token ${neatlistB.key}`
         }
       }).then(res => res.json());
       
-        const results2 =  fetch(url2,
+        const results2 = await fetch(url2,
         {
         headers: {
           Authorization: `Token ${neatlistB.key}`
         }
-      }).then(res => res.json())
-
-      .catch(error => {
-              reject(error); // Reject the promise if an error occurs
-            });
+      })
+        .then(res => res.json())
         console.log(results1, results2, "ano eni?")
         const combinedResults = [...results1.results, ...results2.results].reduce((unique, item) => {
           return unique.find(i => i.id === item.id)
@@ -108,10 +106,10 @@
         }, []);
         if(combinedResults.length){
             //displayMessagesInbox(combinedResults)
-            resolve(combinedResults);
+            //resolve(combinedResults);
         } 
 
-       })
+      
      
      
     }
