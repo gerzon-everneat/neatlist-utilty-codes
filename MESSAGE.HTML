@@ -120,37 +120,29 @@
      
     }
     
-    async function openConvo(chatId, picUrl, notMyName, trade, profile_page_reference){
-    this.chatId = chatId
-    $("#inbox-owner-header").text(notMyName)
-    $("#inbox-text-normal").text(trade)
-    $("#inbox-image").attr("src", picUrl)
-    $("#inbox-image").attr("srcset", picUrl)
-    
-    $("#goto-profile").attr("href", "https://www.neatlist.co/"+profile_page_reference)
-    
-    
-    
-    
-    //field_751728	sender
-    //field_751729	receiver
-    //field_751730	created_at
+    async function openConvo(chatId, picUrl, notMyName, trade, profile_page_reference) {
+      this.chatId = chatId
+      $("#inbox-owner-header").text(notMyName)
+      $("#inbox-text-normal").text(trade)
+      $("#inbox-image").attr("src", picUrl)
+      $("#inbox-image").attr("srcset", picUrl)
+      $("#goto-profile").attr("href", "https://www.neatlist.co/"+profile_page_reference)
+        //field_751728	sender
+        //field_751729	receiver
+        //field_751730	created_at
         console.log(chatId)
-      const url = `https://api.baserow.io/api/database/rows/table/118033/?filter__field_751726__	link_row_has=${chatId}`
-     
-      const results = await fetch(url, 
-       {
-        headers: {
-          Authorization: `Token ${token}`
+        const url = `https://api.baserow.io/api/database/rows/table/118033/?filter__field_751726__link_row_has=${chatId}`
+        const results = await fetch(url, 
+        {
+          headers: {
+            Authorization: `Token ${token}`
+          }
+        }).then(res => res.json());
+          console.log(results)
+          if(results.count > 0){
+          displayMessages(results)
         }
-      }).then(res => res.json());
-        console.log(results)
-      if(results.count > 0){
-       displayMessages(results)
-      }
-     
     }
-    
     function displayMessages(raw_messages) {
     let messages = raw_messages.results.sort((p1, p2) => (p1.id > p2.id) ? 1 : (p1.id < p2.id) ? -1 : 0);
     console.log("messages sorted based on ascending order of their id")
@@ -166,9 +158,9 @@
           
         this.sender = message.field_751728
     
-          let sender =  message.field_751728
+        let sender =  message.field_751728
         let mine = sender == sessionStorage.getItem("email")
-          let Name = mine ? "You" : message.field_892228[0].value
+        let Name = mine ? "You" : message.field_892228[0].value
         let date =  new Date(message.field_751730)
         const options = { weekday: 'long', hour: 'numeric', minute: 'numeric', hour12: true };
         let dayTime = date.toLocaleString('en-US', options);
