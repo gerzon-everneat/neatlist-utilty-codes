@@ -4,7 +4,6 @@
         constructor(accountDetails) {
             this.accountDetails = accountDetails;
             this.account_type = document.querySelector('[data-account-type]').value;
-            
         }
         //generate the getter for the account_id, email, account_type, fullName, pageOwner, sessioned now
         _accountDetails() {
@@ -37,7 +36,7 @@
           let candidates = []
           const page = 1
           const size = 2
-          await fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ this.accountDetails.id + "&page="+pageNumber+"&size="+numRows).then(value =>{
+        	 await fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ this.accountDetails.id + "&page="+pageNumber+"&size="+numRows).then(value =>{
              $.each(value.data.results, function(key, candidate){
                 const dateTime = new Date(candidate.field_751776)
                 const timeOnly = dateTime.toLocaleTimeString()
@@ -65,18 +64,16 @@
                   trade : candidate.field_1026502[0].value,
                   skills : candidate.field_1026503[0].value,
                   stage : candidate.field_826075.value
-                   
                 }
                 candidates.push(candidate)
               })
-               
+              console.log(candidates, "candidates")
+            
             })
-           
-        
         }
         async _inbox() {
        
-          const table_id = 118032
+         const table_id = 118032
         //const url1 = `https://api.baserow.io/v2/grid/118032/rows/?field_751723=${sessionStorage.getItem("email")}`
         //const filterByEmail = `filter__${jobPostUserAccRelFld}__link_row_contains=`+ sessionStorage.getItem("email")
         const email = this._accountDetails().email
@@ -105,13 +102,62 @@
             : [...unique, item];
         }, []);
         if(combinedResults.length){
+        	console.log(combinedResults, "combined results")
             //displayMessagesInbox(combinedResults)
-            //resolve(combinedResults);
+            //resolve(combinedResults);\
+            this._displayMessagesInbox(combinedResults)
         } 
-
-      
-     
-     
+     }
+     _displayMessagesInbox(inboxs){
+        $(".grid-new-message-inbox").empty()
+       const $conversations = $('[desktop-coversations]')
+        $.each($conversations, (index,conversation)=>{
+          $(conversation).empty()
+        })
+        //const email = objectRegistrar.get("employer")._accountDetails().email
+        $.each(inboxs, (key, inbox)=>{
+        console.log(inbox, "inbox")  
+        let chatId = inbox.field_751705
+        const receiver = inbox.field_751723 == this._accountDetails().email ? inbox.field_751724 : inbox.field_751723
+        let picUrl = this.account_type!="professional" ? inbox.field_751771[0].value : inbox.field_751770[0].value
+       
+        let notMyName = this.account_type!="professional" ? inbox.field_751769[0].value : inbox.field_751758[0].value
+        let trade = "HouseKeeper"//sessionStorage.getItem("account-type")!="professional" ? inbox.field_751769 : inbox.field_751758
+       
+        let dateTime = new Date(inbox.field_784870[0].value)
+        let shortDate = dateTime.toLocaleDateString()
+        
+        let lastMessage = inbox.field_784869[inbox.field_784869.length - 1].value.replace(/\n/g, "").replace(/\s+/g, " ").trim().substr(0,25);
+        
+        let professionalId = inbox.field_751756[0].id
+        let companyId = inbox.field_751748[0].id
+        let profilePageRefence =  this.account_type!="professional" ? "view-profile?pro="+professionalId : "view-company?company="+companyId 
+       
+     		//data-w-id="c4e11de2-07e7-3dd6-19ea-8149e2e1b755"
+        $.each($conversations, (index,conversation)=>{
+         const chat = `<div data-chat class="message-block-messages " data-w-id="c179f254-f309-e6cb-d491-98161b61a47c">
+         <div class="one-message-conversations"><div class="one-message-conversation-line">
+         <img src="${picUrl}" class = "message-sender-profile-preview" loading="lazy" alt="">
+         <div class="div-block-608"><div class="job-name-dashboard">${trade}</div><div class="sender-name-dashboard">${notMyName}</div><div class="short-message-dashboard">${lastMessage}</div>
+         </div></div></div></div>`
+         $(conversation).append(chat)
+        })
+        
+        console.log("yes")
+      })
+     document.querySelectorAll('[data-chat]').forEach(chat=>{
+           chat.addEventListener("click", function() {
+            $('.message-block-messages').removeClass('current-message');
+            //$('[data-w-id="c4e11de2-07e7-3dd6-19ea-8149e2e1b755"]').removeAttr('data-w-id');
+            chat.classList.add('current-message');
+            //$(chat).attr('data-w-id', 'c4e11de2-07e7-3dd6-19ea-8149e2e1b755');
+            //$('[data-w-id="c179f254-f309-e6cb-d491-98161b61a47c"]').trigger('click');
+          });
+         })
+    }
+    _truncator26(text) {
+    	return text.substr(0, 26)
     }
   }
+
   </script>
