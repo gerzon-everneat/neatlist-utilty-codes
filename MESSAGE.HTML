@@ -187,11 +187,11 @@
     }
     function sent(){
         if(chatId && sender && receiver && text) {
-              createMessage().then(value=>{
-          mineOrNot=""
-          Name = "You"
-          dayTime = "Now"
-               $(".messages-grid").append(`
+          createMessage().then(value=>{
+            mineOrNot=""
+            Name = "You"
+            dayTime = "Now"
+            $(".messages-grid").append(`
                <div id="w-node-_8dcf25fe-814e-2de8-0469-39cf8fd09a67-06e84186"
              class="${mineOrNot}my-message">
                 <div class="message-header-convo w-row">

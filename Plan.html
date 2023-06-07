@@ -1,3 +1,25 @@
 <script>
-    
-</script>
+    class Message {
+        constructor(Owner) {
+          this.sender = Owner._accountDetails().email
+        this.receiver = null
+        this.message = null
+        
+      }
+      _setMessageText(text) {
+          this.messasge = text;
+      }
+      _setReceiver(receiver) {
+          if(!this.receiver) {
+             this.receiver = receiver
+        }
+      }
+      _sendMessage() {
+      
+      }
+      _messageSentSuccess() {
+      }
+      _messageSentFaild() {
+      }
+    }
+    </script>
