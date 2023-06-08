@@ -1,0 +1,203 @@
+<script>
+  var objectRegistrar = new Map()
+   class Professional {
+    constructor(accountDetails) {
+        this.accountDetails = accountDetails;
+        this.account_type = document.querySelector('[data-account-type]').value;
+        this.messages = null
+        this.chatIDs = null
+       
+    }
+    _accountDetails() {
+      return {
+        id : this.accountDetails.id, 
+        email : this.accountDetails.field_760997,
+        fullname : this.accountDetails.field_760998,
+        pitch: this.accountDetails.field_761020,
+        phone : this.accountDetails.field_761001,
+        address : this.accountDetails.field_761005 + ", "+this.accountDetails.field_761006,
+        chats : this.accountDetails.field_751757
+      }
+    } 
+    _account_type() {
+      return this.account_type;
+    }
+   async _candidates(pageNumber, numRows) {
+   /*
+    let candidates = []
+     await fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ this.accountDetails.id + "&page="+pageNumber+"&size="+numRows).then(value =>{
+       $.each(value.data.results, function(key, candidate){
+        const dateTime = new Date(candidate.field_751776)
+        const timeOnly = dateTime.toLocaleTimeString()
+        const dateOnly =  dateTime.toLocaleDateString()
+        var candidate= {
+          id					: candidate.id,
+          dateOnly : dateOnly,
+          timeOnly : timeOnly,
+          title 			: candidate.field_1026493[0].value,
+          professional_id  : candidate.field_768138[0].id,
+          name  			: candidate.field_768139[0].value,
+          //initials : getInitials(candidate.field_768139[0].value),
+          email       : candidate.field_751967,
+          location  	: candidate.field_768140[0].value +", "+candidate.field_845523[0].value,
+          experience  : candidate.field_845525[0].value,
+          type				: candidate.field_1024105[0].value,
+          dateapplied : dateOnly,
+          picurl  		: candidate.field_845539[0].value || default_picture,
+          applicationStatus : candidate.field_826075.value,
+          verified : candidate.field_1024367[0].value.value,
+          verifiedIcon : candidate.field_1024367[0].value.value == "Verified" ? "https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6442beb8a200b03c7bca5fae_Circle%20Check.svg" : "",
+          language : candidate.field_1026501[0].value,
+          english_level : candidate.field_1053047[0].value.value,
+          position : candidate.field_1026500[0].value,
+          trade : candidate.field_1026502[0].value,
+          skills : candidate.field_1026503[0].value,
+          stage : candidate.field_826075.value
+          }
+          candidates.push(candidate)
+        })
+      })
+      */
+    }
+   async _inbox() {
+     
+    const email = this._accountDetails().email
+    const url1 = `https://api.baserow.io/api/database/rows/table/118033/?filter__field_751728__equal=${email}`
+    const url2 = `https://api.baserow.io/api/database/rows/table/118033/?filter__field_751729__equal=${email}`
+  
+    const results1 =  await fetch(url1, 
+       {
+        headers: {
+          Authorization: `Token ${neatlistB.key}`
+        }
+      }).then(res => res.json());
+  
+        const results2 = await fetch(url2,
+        {
+        headers: {
+          Authorization: `Token ${neatlistB.key}`
+        }
+      })
+    .then(res => res.json())
+    const combinedResults = [...results1.results, ...results2.results].reduce((unique, item) => {
+      return unique.find(i => i.id === item.id)
+        ? unique
+        : [...unique, item];
+    }, []);
+      console.log("loading pro inbox!combinedResults", 	combinedResults)
+    if(combinedResults.length){
+      this.messages = combinedResults
+      const chatIDs = combinedResults.reverse().filter((element, index, self) => {
+        return self.findIndex((e) => e.field_751726[0].value === element.field_751726[0].value) === index;
+      });
+  
+      const groupedByDate = combinedResults.reduce((acc, element) => {
+        const date = element.field_751730.split('T')[0];
+          if (!acc[date]) {
+            acc[date] = [];
+          }
+          acc[date].push(element);
+          return acc;
+      }, {});
+       this.chatIDs = chatIDs
+    
+      this._displayMessagesInbox(chatIDs)
+    } 
+      console.log("loading pro inbox!	this.chatIDse", 	this.chatIDs)
+   }
+    _messages() {
+      return this.messages
+    }
+    _setMessageHeader(chatid) {
+     const profileImages = document.querySelectorAll('[data-profile-image]')
+     const profileNames = document.querySelectorAll('[data-profile-name]')
+      const abouts = document.querySelectorAll('[data-about]')//
+     //const legalStatuses = document.querySelectorAll('[data-legal-status]')
+     const tradeAndJobs = document.querySelectorAll('[data-trade-and-job]')
+     const languages = document.querySelectorAll('[data-languages]')
+     const skills = document.querySelectorAll('[data-skills]')
+     const jobTypes = document.querySelectorAll('[data-job-type]')
+     const contracts = document.querySelectorAll('[data-contract]')
+     const filteredByChatId = this.chatIDs.filter((element) => element.field_751726[0].id === chatid);
+       filteredByChatId.forEach(profile=>{
+      
+     const picUrl = profile.field_785421[0].value;
+       /*
+       abouts.forEach((about)=>about.textContent = "")
+       legalStatuses.forEach((legalStatus)=>legalStatus.textContent = "")
+       tradeAndJobs.forEach((tradeAndJob)=>tradeAndJob.textContent = "")
+       languages.forEach((language)=>language.textContent = "")
+       skills.forEach((skill)=>skill.textContent = "")
+       jobTypes.forEach((jobType)=>jobType.textContent = "")
+       contracts.forEach((contract)=>contract.textContent = "")
+      */
+       profileImages.forEach(profileImage=>profileImage.src = picUrl)
+       profileNames.forEach(profileName=>profileName.textContent = profile.field_1141794[0].value)
+      })
+    }
+     _displayMessagesInbox(chatIDs){
+        $(".grid-new-message-inbox").empty()
+       const $conversations = $('[desktop-coversations]')
+        $.each($conversations, (index,conversation)=>{
+          $(conversation).empty()
+        })
+        $.each(chatIDs, (key, inbox)=>{
+        //let chatId = inbox.field_751705
+        const receiver = inbox.field_751728 == this._accountDetails().email ? inbox.field_751729 : inbox.field_751728
+        const picUrl = this.account_type!="professional" ? inbox.field_785422[0].value : inbox.field_785421[0].value
+        const notMyName = inbox.field_1141794[0].value
+        const trade = "Company"//sessionStorage.getItem("account-type")!="professional" ? inbox.field_751769 : inbox.field_751758
+        const chatId = inbox.field_751726[0].id;
+        const lastMessage = inbox.field_751731.replace(/\n/g, "").replace(/\s+/g, " ").trim().substr(0,25);
+        $.each($conversations, (index,conversation)=>{
+          //const chatId = inbox.field_751726[0].id;
+          //const receiver = inbox.field_751728 === this._accountDetails().email ? inbox.field_751729 : inbox.field_751728;
+          //const picUrl = this.account_type !== "professional" ? inbox.field_785422[0].value : inbox.field_785421[0].value;
+          //const trade = "HouseKeeper";
+          //const lastMessage = inbox.field_751731.replace(/\n/g, "").replace(/\s+/g, " ").trim().substr(0, 25);
+          const chat = document.createElement("div");
+          chat.classList.add("message-block-messages");
+          chat.setAttribute("data-chat", "");
+          chat.setAttribute("data-w-id", "c179f254-f309-e6cb-d491-98161b61a47c");
+          chat.innerHTML = `
+            <div class="one-message-conversations">
+              <div class="one-message-conversation-line">
+                <img src="${picUrl}" class="message-sender-profile-preview" loading="lazy" alt="">
+                <div class="div-block-608">
+                  <div class="job-name-dashboard">${trade}</div>
+                  <div class="sender-name-dashboard">${notMyName}</div>
+                  <div class="short-message-dashboard">${lastMessage}</div>
+                </div>
+              </div>
+            </div>
+          `;
+         chat.addEventListener("click", function() {
+          $('.message-block-messages').removeClass('current-message');
+          chat.classList.add('current-message');
+            const messages = objectRegistrar.get("professional")._messages()
+            .filter((element) => element.field_751726[0].id === chatId)
+            const messagesByDate = messages.reduce((acc, element) => {
+            const date = element.field_751730.split('T')[0];
+              if (!acc[date]) {
+                acc[date] = [];
+              }
+              acc[date].push(element);
+              return acc;
+            }, {})
+            const sortedDates = Object.keys(messagesByDate).sort();
+          //$('[data-message-content]').empty()
+            console.log(sortedDates, "messages")
+            objectRegistrar.get("professional")._setMessageHeader(chatId)
+             //openMessage(sortedDates, messagesByDate)
+            const messenger = new Message(objectRegistrar.get("professional"), inbox)
+            objectRegistrar.set("messenger", messenger)
+            objectRegistrar.get("messenger")._openMessage(sortedDates, messagesByDate)
+          });
+         $(conversation).append(chat)
+        })
+      })
+    }
+  
+    
+  }
+    </script>
