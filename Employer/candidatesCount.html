@@ -11,4 +11,156 @@ self.onmessage = function(event) {
       self.postMessage(result);
     }, 1000);
   };
+  <style>
+    @media screen and (max-width: 320px) {
+      .each-candidate {
+        margin-bottom: 40px !important;
+      }
+    }
+  </style>
   
+  
+  <script>
+    
+    $('.all-jobs-sorting-components').attr('hidden','hidden')
+   
+    /*
+    field_751992 	user_account_relation	array
+    link_row_has, link_row_has_not, link_row_contains, link_row_not_contains, empty, not_empty
+    
+    let found = Array.from(set).find(function(o){ return o.name === 'John'}); false or true
+    
+    let set = new Set([{id: 1, name: 'John'}, {id: 2, name: 'Jane'}]);
+    let obj = [...set].filter(function(o){ return o.name === 'John'});
+    console.log(obj);  // [{id: 1, name: 'John'}]
+    */
+    
+    var myJobPostsId = [];
+    fetchData("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains="+sessionStorage.getItem("email")).then(value =>{
+    if((value.data.results).length >0){
+        $.each((value.data.results), function(key, eachval){     
+            if(eachval.job_applications.length > 0) {
+              $.each(eachval.job_applications, function(index, item){
+                myJobPostsId.push(item.id)
+              })
+            }
+        })
+        loadCandidates()
+      }
+    });
+    
+    const professionals = new Map();
+    var selectedProfessional = null
+    var array_candidates = []
+    
+    function loadCandidates(){
+      fetchData("https://api.baserow.io/api/database/rows/table/118042/?user_field_names=true").then(value =>{
+        if((value.data.results).length > 0) {
+         $("#results-container").empty() 
+            $.each((value.data.results), function(key, eachval){
+                const dateTime = new Date(eachval.date_applied)
+                const dateOnly =  dateTime.toLocaleDateString()
+                if(!myJobPostsId.includes(eachval.id)) {
+                  return true;
+                }
+                var obj = {
+                  id					: eachval.id,
+                  professional_id  : eachval.account_profile_relation[0].id,
+                  name  			: eachval.fld_name[0].value,
+                  email       : eachval.applicant_user_id,
+                  location  	: eachval.fld_city[0].value,
+                  experience  : eachval.fld_experience[0].value,
+                  dateapplied : dateOnly,
+                  picurl  		: eachval.fld_profile_picture[0].value
+                }
+                array_candidates.push(obj)
+            $("#results-container").append( `
+            <tr><td><div class="candidate-card-container-new each-candidate" data-name="${eachval.fld_name[0].value}" data-id="${eachval.id}" data-email="${eachval.applicant_user_id}"  data-location="${eachval.fld_city[0].value}" 
+            data-experience="${eachval.fld_experience[0].value}"  data-dateapplied="${dateOnly}" data-picurl="${eachval.fld_profile_picture[0].value}">
+    <div class="candidate-card-content"><div class="first-candidates-employer-image-title-goto"><div class="w-layout-grid candidates-grid-first">
+          <div id="w-node-_1de7512e-62ad-d8fb-cfdc-eebe41fb9a5b-f6e84136" class="candidates-image-container"><div class="candidates-image-content">
+              <img src="${eachval.fld_profile_picture[0].value || default_picture}" loading="lazy" id="w-node-_1de7512e-62ad-d8fb-cfdc-eebe41fb9a5d-f6e84136" sizes="60px" srcset="${eachval.fld_profile_picture[0].value || default_picture} 500w, 
+              ${eachval.fld_profile_picture[0].value || default_picture} 800w, 
+              ${eachval.fld_profile_picture[0].value || default_picture} 1080w, 
+              ${eachval.fld_profile_picture[0].value || default_picture} 1600w, 
+              ${eachval.fld_profile_picture[0].value || default_picture} 2000w, 
+              ${eachval.fld_profile_picture[0].value || default_picture} 2600w, 
+              ${eachval.fld_profile_picture[0].value || default_picture} 3200w, 
+              ${eachval.fld_profile_picture[0].value || default_picture} 4096w"  alt="" class="candidates-image"></div></div>
+          <div id="w-node-_1de7512e-62ad-d8fb-cfdc-eebe41fb9a5e-f6e84136" class="candidate-title-company-container"><div class="candidate-title-company-content"><div class="candidate-title-content">
+                <h5 class="candidate-job-title">${eachval.fld_name[0].value}</h5><div class="candidate-job-status"><img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/63957936027db0cc6a07d32f_circle-check-thin.svg" loading="lazy" alt="" class="status-img"></div>
+                </div><div class="candidate-goto-content"><img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/62a1fe4a88d6da072e5232fc_icon-3-job-categories-job-board-x-template.svg" loading="lazy" 
+                  alt="Portfolio Icon - Job Board X Webflow Template" class="side-tiny-icon"><a href="#" class="candidates-goto-link">${'Housekeeper'}</a></div></div></div></div></div>
+      <div class="second-candidate-city-state-stats-pub-date"><div class="candidate-city-state"><div class="default-text-style">${eachval.fld_city[0].value}</div></div><div class="candidates-hired-stats-date">
+        <div class="candidates-hired-stats-icon"><img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/62a1fe4a88d6da72fb5232f5_icon-2-job-categories-job-board-x-template.svg" loading="lazy" 
+          alt="Graph Icon - Job Board X Webflow Template" class="side-tiny-icon"><div class="default-text-style">${eachval.fld_experience[0].value}</div>
+        </div><div class="candidates-hired-stats-icon"><img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/63b2a532941bfa5a280d4101_Calendar.svg" loading="lazy" alt="" 
+        class="side-tiny-icon"><div class="default-text-style">${dateOnly}</div></div></div></div><div class="third-candidate-applicant-status"></div></div><div class="form-candidates-status w-form">
+        <form id="email-form-5" name="email-form-5" data-name="Email Form 5" method="get" class="application-status" aria-label="Email Form 5">
+        <select id="field-8" name="field-8" data-name="Field 8" class="candidates-status hired w-select ${eachval.application_status.toLowerCase()}" onchange="updateProApplicationStatus(${eachval.id},this)">
+          <option value="">Select one...</option><option value="New" ${"New" === eachval.application_status ? "selected" : ""}>New</option><option value="Lead In" ${"Lead In" === eachval.application_status ? "selected" : ""}>Lead In</option>
+          <option value="Qualified" ${"Qualified" === eachval.application_status ? "selected" : ""}>Qualified</option>option value="Interview" ${"Interview" ===  eachval.application_status ? "selected" : ""}>Interview</option>
+          <option value="Rejected" ${"Rejected" ===  eachval.application_status ? "selected" : ""}>Rejected</option><option value="Test" ${"Test" ===  eachval.application_status ? "selected" : ""}>Test</option>
+          <option value="Hired" ${"Hired" ===  eachval.application_status ? "selected" : ""}>Hired</option></select></form>
+        <div class="w-form-done" tabindex="-1" role="region" aria-label="Email Form 5 success"><div>Thank you! Your submission has been received!</div></div>
+        <div class="w-form-fail" tabindex="-1" role="region" aria-label="Email Form 5 failure"><div>Oops! Something went wrong while submitting the form.</div></div></div></div></td>
+              <td class="hidden" >Pro</td><td class="hidden" >Address</td> <td class="hidden" >Verification</td><td class="hidden" >Type</td><td class="hidden" >Experience</td><td class="hidden" >Date</td>
+              <td class="hidden" >Application Status</td><td class="hidden" >Sequence</td></tr>
+            `
+            )         
+            })
+            loadDataTable()
+        }
+       })
+    }
+  
+  async function updateProApplicationStatus(rowid,new_status)
+  {
+    if(!new_status.value) {
+      return true;
+    }
+    $(new_status).removeAttr('style')
+    var qualified = "#ffeaae"
+    var lead_in = "#cfedff"
+    var interview = "#ebdbff"
+    var rejected = "#ffb8b8"
+    var test = "#dafff6"
+    var hired= "#ccffd1"
+  
+    if(new_status.value.toLowerCase() == "qualified") {
+      $(new_status).css("background-color", qualified )
+    } else if(new_status.value.toLowerCase() == "lead in") {
+      $(new_status).css("background-color", lead_in )
+    }   else if(new_status.value.toLowerCase() == "interview") { 
+      $(new_status).css("background-color", interview )
+    }   else if(new_status.value.toLowerCase() == "rejected") {
+      $(new_status).css("background-color", rejected )
+    }   else if(new_status.value.toLowerCase() == "test") {
+      $(new_status).css("background-color", test )
+    }  else if(new_status.value.toLowerCase() == "hired") { 
+      $(new_status).css("background-color", hired )
+    }  else if(new_status.value.toLowerCase() == "new") { 
+      
+    } 
+    
+  
+  $(new_status).add('style')
+  
+    console.log(new_status.value, rowid)
+    
+    await axios({
+      method: "PATCH",
+      url: "https://api.baserow.io/api/database/rows/table/118042/"+rowid+"/?user_field_names=true",
+      headers: {
+        Authorization: "Token " + token,
+        "Content-Type": "application/json"
+      },
+      data: {
+        "application_status": new_status.value
+      }
+    })
+    
+  }
+  
+  
+    </script>

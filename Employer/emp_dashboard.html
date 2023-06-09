@@ -1,41 +1,138 @@
 <script>
-//create a javascript thread that fetch and count the number of candidates that applied for a job
-//create thread for displaying recent messages
-//create thread to display open jobs or update its status
-//create thread to display candidates that applied for a job
-//create thread to display create the graphs and updates
-
-//candidatesCount.js this should includes not only the total candidates, also active candidates and new candidates.
-
-//jobStatistics.js this has 6 legends namely invited(#595959), applied(#2f54eb),interviewed(#fa0),test(#fa8c16), hired(#52c41a), and rejected(#52c41a).
-    //this should be updated every 5 seconds
-
-//recentMessages.js this should display the recent messages from the candidates
-    //this should be updated every 5 seconds
-
-//openJobs.js this should display the open jobs and its status
-    //this should be updated every 5 seconds
-
-//candidates.js this should display the candidates that applied for a job
-    //this should be updated every 5 seconds
-
-// Create 10 workers
-const workers = [];
-for (let i = 0; i < 10; i++) {
-  const worker = new Worker('candidatesCount.js');
-  workers.push(worker);
-}
-
-// Start tasks in each worker
-workers.forEach((worker, index) => {
-  worker.postMessage({ taskId: index });
-});
-
-// Receive messages from workers
-workers.forEach((worker, index) => {
-  worker.onmessage = function(event) {
-    console.log(`Message from worker ${index}:`, event.data);
-  };
-});
-
-</script>
+  fetchData("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains="+sessionStorage.getItem("email")).then(value=>console.log(value, "fetchData outside test"))
+  class TaskManager {
+    constructor() {
+      this.taskQueue = [];
+      this.isProcessing = false;
+    }
+  
+    enqueueTask(task) {
+      this.taskQueue.push(task);
+      this.processTaskQueue();
+    }
+  
+    processTaskQueue() {
+      if (this.isProcessing || this.taskQueue.length === 0) {
+        return;
+      }
+  
+      this.isProcessing = true;
+  
+      const task = this.taskQueue.shift();
+  
+      const taskString = task.toString();
+  
+      const workerScript = `
+        this.onmessage = function(event) {
+          const taskLogic = ${taskString};
+          taskLogic();
+          postMessage({ result: "Task executed" });
+        };
+      `;
+  
+      const workerBlob = new Blob([workerScript]);
+      const worker = new Worker(URL.createObjectURL(workerBlob));
+  
+      worker.onmessage = (event) => {
+        const { result } = event.data;
+        console.log(result);
+        worker.terminate();
+        this.isProcessing = false;
+        this.processTaskQueue();
+      };
+  
+      worker.postMessage({ taskId: 1 });
+    }
+  }
+  
+  
+  
+  
+  const taskManager = new TaskManager();
+  
+  function fetchData2(url) {
+    return axios({
+      method: "GET",
+      url: url,
+      headers: {
+        Authorization: "Token " + neatlistB.key,
+      },
+    })
+      .then(response => response.data)
+      .catch(error => {
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        } else if (error.request) {
+          console.log(error.request);
+        } else {
+          console.log("Error", error.message);
+        }
+        console.log(error.config);
+      });
+  }
+  
+  function taskWrapper() {
+    function taskLogic() {
+      var myJobPostsId = [];
+        function fetchData2(url) {
+          var neatlistB = {};
+    
+            Object.defineProperty(neatlistB, 'key', {
+              value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
+              enumerable: false,
+            });
+    
+          return axios({
+            method: "GET",
+            url: url,
+            headers: {
+              Authorization: "Token " + neatlistB.key,
+            },
+          })
+            .then(response => response.data)
+            .catch(error => {
+              if (error.response) {
+                console.log(error.response.data);
+                console.log(error.response.status);
+                console.log(error.response.headers);
+              } else if (error.request) {
+                console.log(error.request);
+              } else {
+                console.log("Error", error.message);
+              }
+              console.log(error.config);
+            });
+        }
+      // Perform the data retrieval logic
+      fetchData2("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains=company2@test.com")
+        .then(value => {
+          if (value && value.results && value.results.length > 0) {
+            value.results.forEach(eachval => {
+              if (eachval.job_applications && eachval.job_applications.length > 0) {
+                eachval.job_applications.forEach(item => {
+                  myJobPostsId.push(item.id);
+                });
+              }
+            });
+            console.log("done!");
+            console.log(myJobPostsId);
+          }
+        });
+    }
+  
+    taskLogic();
+  }
+  
+  const task = taskWrapper;
+  
+  taskManager.enqueueTask(task);
+  
+  
+  
+  $(document).ready(function(){
+  
+  })//document ready!
+  
+  </script>
