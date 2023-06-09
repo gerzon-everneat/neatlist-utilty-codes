@@ -1,0 +1,14 @@
+// Receive messages from the main thread
+self.onmessage = function(event) {
+    const { taskId } = event.data;
+  
+    // Run the task continuously in the background
+    setInterval(() => {
+      // Perform your task logic here
+      const result = `Task ${taskId} executed at ${new Date()}`;
+      
+      // Send the result back to the main thread
+      self.postMessage(result);
+    }, 1000);
+  };
+  

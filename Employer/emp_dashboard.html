@@ -1,0 +1,41 @@
+<script>
+//create a javascript thread that fetch and count the number of candidates that applied for a job
+//create thread for displaying recent messages
+//create thread to display open jobs or update its status
+//create thread to display candidates that applied for a job
+//create thread to display create the graphs and updates
+
+//candidatesCount.js this should includes not only the total candidates, also active candidates and new candidates.
+
+//jobStatistics.js this has 6 legends namely invited(#595959), applied(#2f54eb),interviewed(#fa0),test(#fa8c16), hired(#52c41a), and rejected(#52c41a).
+    //this should be updated every 5 seconds
+
+//recentMessages.js this should display the recent messages from the candidates
+    //this should be updated every 5 seconds
+
+//openJobs.js this should display the open jobs and its status
+    //this should be updated every 5 seconds
+
+//candidates.js this should display the candidates that applied for a job
+    //this should be updated every 5 seconds
+
+// Create 10 workers
+const workers = [];
+for (let i = 0; i < 10; i++) {
+  const worker = new Worker('candidatesCount.js');
+  workers.push(worker);
+}
+
+// Start tasks in each worker
+workers.forEach((worker, index) => {
+  worker.postMessage({ taskId: index });
+});
+
+// Receive messages from workers
+workers.forEach((worker, index) => {
+  worker.onmessage = function(event) {
+    console.log(`Message from worker ${index}:`, event.data);
+  };
+});
+
+</script>

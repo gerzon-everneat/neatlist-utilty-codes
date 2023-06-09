@@ -86,7 +86,7 @@
       dateBlock.className = 'date-block-messenger';
       dateBlock.innerHTML = `<div class="text-block-225">${date}</div>`;
       messageContent.appendChild(dateBlock);
-      const descMessages =  messages[date].sort((a,b) => a.id - b.id) 
+      const descMessages =  messages[date].sort((a,b) => b.id - a.id) 
       descMessages.forEach(message => {
         messageContent.appendChild(message.field_751728 === this.sender ? this._requestMessage(message) :  this._responseMessage(message));
       });
