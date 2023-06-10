@@ -1,5 +1,4 @@
 <script>
-  fetchData("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains="+sessionStorage.getItem("email")).then(value=>console.log(value, "fetchData outside test"))
   class TaskManager {
     constructor() {
       this.taskQueue = [];
@@ -11,7 +10,7 @@
       this.processTaskQueue();
     }
   
-    processTaskQueue() {
+    async processTaskQueue() {
       if (this.isProcessing || this.taskQueue.length === 0) {
         return;
       }
@@ -20,119 +19,53 @@
   
       const task = this.taskQueue.shift();
   
-      const taskString = task.toString();
+      try {
+        await task();
+        console.log("Task executed successfully");
+      } catch (error) {
+        console.error("Task encountered an error:", error);
+      }
   
-      const workerScript = `
-        this.onmessage = function(event) {
-          const taskLogic = ${taskString};
-          taskLogic();
-          postMessage({ result: "Task executed" });
-        };
-      `;
-  
-      const workerBlob = new Blob([workerScript]);
-      const worker = new Worker(URL.createObjectURL(workerBlob));
-  
-      worker.onmessage = (event) => {
-        const { result } = event.data;
-        console.log(result);
-        worker.terminate();
-        this.isProcessing = false;
-        this.processTaskQueue();
-      };
-  
-      worker.postMessage({ taskId: 1 });
+      this.isProcessing = false;
+      this.processTaskQueue();
     }
   }
   
-  
-  
-  
   const taskManager = new TaskManager();
   
-  function fetchData2(url) {
+  taskManager.enqueueTask(async () => {
+    try {
+      const response = await fetchData("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains=company2@test.com");
+      console.log(response, "response worked!")
+      return response;
+    } catch (error) {
+      console.log("Error occurred during task execution:", error);
+      throw error;
+    }
+  });
+  
+  function fetchData(url) {
     return axios({
       method: "GET",
       url: url,
       headers: {
-        Authorization: "Token " + neatlistB.key,
-      },
-    })
-      .then(response => response.data)
-      .catch(error => {
-        if (error.response) {
-          console.log(error.response.data);
-          console.log(error.response.status);
-          console.log(error.response.headers);
-        } else if (error.request) {
-          console.log(error.request);
-        } else {
-          console.log("Error", error.message);
+        Authorization: "Token " + neatlistB.key
+      }
+    });
+  }
+  
+  $(document).ready(function() {
+    setInterval(() => {
+      taskManager.enqueueTask(async () => {
+        try {
+          const response = await fetchData("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains=company2@test.com");
+          console.log(response, "response worked!")
+          return response;
+        } catch (error) {
+          console.log("Error occurred during task execution:", error);
+          throw error;
         }
-        console.log(error.config);
       });
-  }
-  
-  function taskWrapper() {
-    function taskLogic() {
-      var myJobPostsId = [];
-        function fetchData2(url) {
-          var neatlistB = {};
-    
-            Object.defineProperty(neatlistB, 'key', {
-              value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
-              enumerable: false,
-            });
-    
-          return axios({
-            method: "GET",
-            url: url,
-            headers: {
-              Authorization: "Token " + neatlistB.key,
-            },
-          })
-            .then(response => response.data)
-            .catch(error => {
-              if (error.response) {
-                console.log(error.response.data);
-                console.log(error.response.status);
-                console.log(error.response.headers);
-              } else if (error.request) {
-                console.log(error.request);
-              } else {
-                console.log("Error", error.message);
-              }
-              console.log(error.config);
-            });
-        }
-      // Perform the data retrieval logic
-      fetchData2("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains=company2@test.com")
-        .then(value => {
-          if (value && value.results && value.results.length > 0) {
-            value.results.forEach(eachval => {
-              if (eachval.job_applications && eachval.job_applications.length > 0) {
-                eachval.job_applications.forEach(item => {
-                  myJobPostsId.push(item.id);
-                });
-              }
-            });
-            console.log("done!");
-            console.log(myJobPostsId);
-          }
-        });
-    }
-  
-    taskLogic();
-  }
-  
-  const task = taskWrapper;
-  
-  taskManager.enqueueTask(task);
-  
-  
-  
-  $(document).ready(function(){
-  
-  })//document ready!
-  
+    }, 5000); // Run the task every 5 seconds
+  });
   </script>
