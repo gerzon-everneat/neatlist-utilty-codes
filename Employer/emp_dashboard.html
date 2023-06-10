@@ -3,6 +3,8 @@
     constructor() {
       this.taskQueue = [];
       this.isProcessing = false;
+      this.iterationCount = 0; // Counter variable
+      this.maxIterations = 10; // Maximum number of iterations before termination
     }
   
     enqueueTask(task) {
@@ -22,6 +24,12 @@
       try {
         await task();
         console.log("Task executed successfully");
+        this.iterationCount++; // Increment the iteration count
+  
+        if (this.iterationCount >= this.maxIterations) {
+          console.log("Task iterations reached the maximum limit. Terminating.");
+          return; // Terminate the task execution
+        }
       } catch (error) {
         console.error("Task encountered an error:", error);
       }
