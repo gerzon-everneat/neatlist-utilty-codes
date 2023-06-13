@@ -4,28 +4,22 @@
       this.taskQueue = [];
       this.isProcessing = false;
       this.iterationCount = 0; // Counter variable
-      this.maxIterations = 10; // Maximum number of iterations before termination
+      this.maxIterations = 30; // Maximum number of iterations before termination
     }
-  
     enqueueTask(task) {
       this.taskQueue.push(task);
       this.processTaskQueue();
     }
-  
     async processTaskQueue() {
       if (this.isProcessing || this.taskQueue.length === 0) {
         return;
       }
-  
       this.isProcessing = true;
-  
       const task = this.taskQueue.shift();
-  
       try {
         await task();
         console.log("Task executed successfully");
         this.iterationCount++; // Increment the iteration count
-  
         if (this.iterationCount >= this.maxIterations) {
           console.log("Task iterations reached the maximum limit. Terminating.");
           return; // Terminate the task execution
@@ -33,18 +27,15 @@
       } catch (error) {
         console.error("Task encountered an error:", error);
       }
-  
       this.isProcessing = false;
       this.processTaskQueue();
     }
   }
-  
   const taskManager = new TaskManager();
-  let candidatesCountValue = null
-  let activeCandidatesCountValue = null
-  let newCandidatesCountValue = null
   let openJobPostsValue = null
+   /* 
   taskManager.enqueueTask(async () => {
+  
     try {
       const response = await fetchData("https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true&filter__field_751992__link_row_contains=company2@test.com");
       console.log(response, "response worked!")
@@ -54,135 +45,60 @@
       throw error;
     }
   });
-  
+   
   function fetchData(url) {
     return axios({
       method: "GET",
       url: url,
       headers: {
         Authorization: "Token " + neatlistB.key
-      }
-    });
-  }
-  
+        }
+      });
+   }
+  */
   $(document).ready(function() {
+  const pageSetup = new PageSetup();
+  objectRegistrar.set("pageSetup",pageSetup)
+    setInterval(()=>{
+      taskManager.enqueueTask(async () => {
+      objectRegistrar.get("pageSetup")._loadMemberStack()
+      objectRegistrar.get("pageSetup")._getUserId()
+      });
+    }, 5000)
     setInterval(() => {
       taskManager.enqueueTask(async () => {
         try {
-          //candidates
-          const response = await fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_contains=company2@test.com"); 
-          const candidatesCounts = document.querySelectorAll('[data-candidates-count]')
-          const newCandidatesCount = document.querySelector('[data-new-candidates]')
-          const activeCandidatesCount = document.querySelector('[data-active-candidates]')
-            if(candidatesCountValue!=response.data.count) {
-              candidatesCounts.forEach(candidatesCount=>candidatesCount.textContent = response.data.count)
-                candidatesCountValue = response.data.count
-                const currentDate = new Date().toISOString().split("T")[0]; // Get the current date in "YYYY-MM-DD" format
-                const newCandidates = response.data.results.filter(item => {
-                const itemDate = item.field_751776.split("T")[0]; // Extract the date from the "create_at" field
-                return itemDate === currentDate; // Compare the item's date with the current date
-                });
-                 console.log(newCandidates,newCandidates.length, "filteredResults");
-                
-                 const inActiveStatus = ["hired", "invited", "rejected"]
-                const activeCandidates = response.data.results.filter(item => {
-                const isActive = !inActiveStatus.includes(item.field_826075.value.toLowerCase()); 
-                return isActive; 
-                });
-                console.log(activeCandidates,activeCandidates.length, "activeCandidates")
-              if(activeCandidatesCountValue!=activeCandidates.length) {
-                activeCandidatesCountValue = activeCandidates.length
-                activeCandidatesCount.textContent = activeCandidatesCountValue
-              }
-              if(newCandidatesCountValue!=newCandidates.length) {
-                newCandidatesCount.textContent = newCandidates.length
-                newCandidatesCountValue = newCandidates.length
-                }
-               
-               
-               const results = response.data.results;
-  
-              // Create an object to store the grouped results
-              const groupedResults = {};
-  
-              // Group the results by field_826075.value
-              results.forEach(item => {
-                const groupKey = item.field_826075.value;
-  
-                // Check if the group key is not null or undefined
-                if (groupKey !== null && groupKey !== undefined) {
-                  if (groupedResults.hasOwnProperty(groupKey)) {
-                    groupedResults[groupKey].push(item);
-                  } else {
-                    groupedResults[groupKey] = [item];
-                  }
-                }
-              });
-               // Print the grouped results
-              for (const groupKey in groupedResults) {
-                console.log(`Group: ${groupKey}`);
-                console.log(`Items:`, groupedResults[groupKey],groupedResults[groupKey].length);
-              }
-              document.querySelector('[data-invite-count]').textContent = groupedResults['Invite']?.length ?? 0
-              document.querySelector('[data-applied-count]').textContent = groupedResults['Applied']?.length ?? 0
-              document.querySelector('[data-interviewed]').textContent = groupedResults['Interviewed']?.length ?? 0
-              document.querySelector('[data-test-count]').textContent = groupedResults['Test']?.length ?? 0
-              document.querySelector('[data-hired-count]').textContent = groupedResults['Hired']?.length ?? 0
-              document.querySelector('[data-rejected-count]').textContent = groupedResults['Rejected']?.length ?? 0
-  
-            }
-          return response;
-        } catch (error) {
-          console.log("Error occurred during task execution:", error);
-          throw error;
-        }
-      });
-    }, 5000); // Run the task every 5 seconds
-    
-     setInterval(() => {
-      taskManager.enqueueTask(async () => {
-        try {
-        //field_925534
-          const response = await fetchData("https://api.baserow.io/api/database/rows/table/113442/?filter__field_751992__link_row_has=14&filter__field_925534__equal=Open");
-         
-          //const openJobPosts = response.data.results.filter(job => job.field_925534 === "Open");
-          const openJobPosts = response.data.results
-          if(openJobPostsValue!=openJobPosts.length) {
-           $('[data-open-job-posts]').empty()
-          document.querySelector('[data-open-job-posts]').innerHTML = ''
-            openJobPosts.forEach(openJobPost=>{
-              const openJob = document.createElement('div')
-              openJob.className = "div-block-612"
-              openJob.innerHTML = `<div class="div-block-613"><div class="text-block-174">${openJobPost.field_718237}</div><div class="div-block-614"><div class="div-block-605 hired-tag"><div class="text-block-172 hired-tag">Open</div></div><img src="https://assets.website-files.com/64007e7eedfb2cc3f5fe4fa4/648312a360f9ba2ad79f87c3_threeDotsVertical.png" loading="lazy" alt="" class="image-115"></div></div><div class="div-block-615"><div class="text-block-175">Type</div><div class="text-block-176">${openJobPost.field_718255}</div></div><div class="div-block-615"><div class="text-block-177">Location</div><div class="text-block-178">(${openJobPost.field_747240[0].value}) - 5 mi</div></div><div class="div-block-615"><div class="text-block-179">Date created</div><div class="text-block-180">${formatDate(openJobPost.field_718282)}</div></div>`
-              
-              
-              $('[data-open-job-posts]').append(openJob)
-            })
-            openJobPostsValue = openJobPosts.length
+          if(objectRegistrar.get("candidates") != -1 && objectRegistrar.get("employer")) {
+            const candidates = new Candidates(objectRegistrar.get("employer"))
+            objectRegistrar.set("candidates",candidates)
           }
-          
-          console.log( response.data.results, "All jobs that are open!");
-          
-          
-  
-          return response;
+          if(objectRegistrar.get("candidates")) {
+            objectRegistrar.get("candidates")._getCandidatesStats()
+          }
+        } catch (error) {
+          throw error;
+        }
+      });
+    }, 5000); // Run the task every 5 seconds
+     setInterval(() => {
+      taskManager.enqueueTask(async () => {
+        try {
+          if(objectRegistrar.get("employer")) {
+            const openJobs = new OpenJobs(objectRegistrar.get("employer"))
+            openJobs._shopOpenJobs()
+          }
         } catch (error) {
           console.log("Error occurred during task execution:", error);
           throw error;
         }
       });
     }, 5000); // Run the task every 5 seconds
-    
-      
      setInterval(() => {
       taskManager.enqueueTask(async () => {
         try {
-        if(objectRegistrar.get("employer")!=-1) {
-            
-           objectRegistrar.get("employer")._inbox()
-        }
-        
-       
+          if(objectRegistrar.get("employer") != -1) {
+             objectRegistrar.get("employer")._inbox()
+          }
         } catch (error) {
           console.log("Error occurred during task execution:", error);
           throw error;
@@ -190,6 +106,7 @@
       });
     }, 5000); // Run the task every 5 seconds
     //
+    loadCandidates(currentPage)
   });//document ready
   //"https://api.baserow.io/api/database/rows/table/113442/?user_field_names=true"
   
