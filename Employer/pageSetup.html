@@ -1,44 +1,52 @@
-<script> class PageSetup {
-    constructor() {
+<div data-page-setup>
+</div>
+<script>
+var neatlistB = {};
+
+Object.defineProperty(neatlistB, 'key', {
+  value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
+  enumerable: false,
+});
+class PageSetup {
+  constructor() {
     $("[data-page-setup]").empty();
+     this.pageIsSetup = false
      this.inputSession = $("<input type='hidden' data-sessioned value='true'>");
      this.inputEmail = $("<input type='hidden' data-email>");
-        this.inputAccountType = $("<input type='hidden' data-account-type>");
+     this.inputAccountType = $("<input type='hidden' data-account-type>");
      this.inputFullName = $("<input type='hidden' data-fullname>");
      this.inputCurrentPage = $("<input type='hidden' data-current-page>");
+     this.email = null
      $("#professional-profile-email").attr("readonly",true)
      $("#professional-profile-fullname").attr("readonly",true)
      $("#professional-profile-phone").attr("readonly",true)
      this.verified=null;
-  }
-  _loadMemberStack() {
-  window.$memberstackDom.getCurrentMember().then((member) => {
+  	}
+    async _loadMemberStack() {
+      if(this.pageIsSetup) {
+       return
+      }
+    window.$memberstackDom.getCurrentMember().then((member) => {
     console.log(member.data, "member.data")
     if (member.data) {
-      $("[data-page-setup]").append(inputSession)
+      $("[data-page-setup]").append(this.inputSession)
 
       const fullNameValue = member.data.customFields["first-name"] + " " + member.data.customFields["last-name"]
-      inputFullName.val(fullNameValue);
-      $("[data-page-setup]").append(inputFullName)
-       inputEmail.val(member.data.auth.email)
-      $("[data-page-setup]").append(inputEmail)
-      
-      
-      
-      inputAccountType.val(member.data.customFields["account-type"]);
-      $("[data-page-setup]").append(inputAccountType)
-
-
+      this.inputFullName.val(fullNameValue);
+      $("[data-page-setup]").append(this.inputFullName)
+       this.inputEmail.val(member.data.auth.email)
+       this.email = member.data.auth.email
+      $("[data-page-setup]").append(this.inputEmail)
+      this.inputAccountType.val(member.data.customFields["account-type"]);
+      $("[data-page-setup]").append(this.inputAccountType)
       $("#create-profile-full-name").val(fullNameValue)
-        if(inputAccountType.val()=="company") {
+        if(this.inputAccountType.val()=="company") {
           $("#nav-link-dashboard-pro").hide()
           $("#nav-link-dashboard").show()
-          
-        } else if(inputAccountType.val()=="individual") {
+        } else if(this.inputAccountType.val()=="individual") {
           $("#nav-link-dashboard-pro").hide()
           $("#nav-link-dashboard").show()
-
-        } else if(inputAccountType.val()=="professional") {
+        } else if(this.inputAccountType.val()=="professional") {
           $("#nav-link-dashboard-pro").show()
           $("#nav-link-dashboard").hide()
           //window.location.href="/dashboards/dashboard-prof"
@@ -48,19 +56,16 @@
           if(!localStorage.getItem("sessioned")) {
             //if(!document.querySelector('[data-sessioned]')) {
           localStorage.setItem("sessioned", true)
-          
-          inputEmail.val(member.data.auth.email);
-          $("[data-page-setup]").append(inputEmail);
- 
-          
+          this.inputEmail.val(member.data.auth.email);
+          $("[data-page-setup]").append(this.inputEmail);
           //window.location.href="/home"
-          if(inputAccountType.val()=="company") {
+          if(this.inputAccountType.val()=="company") {
              //	$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
                window.location.href="/dashboards/dashboard"
-          } else if(inputAccountType.val()=="individual") {
+          } else if(this.inputAccountType.val()=="individual") {
               //$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
               window.location.href="/dashboards/dashboard"
-          } else if(inputAccountType.val()=="professional") {
+          } else if(this.inputAccountType.val()=="professional") {
             //  $("#nav-link-dashboard").attr("href", "/dashboards/dashboard-prof")
               window.location.href="/dashboards/dashboard-prof"
           } else {
@@ -68,31 +73,67 @@
           }
       }
       $("#side-signup-1").hide()
-      verified = member.data.verified
+      this.verified = member.data.verified
       $("#btn-signup-drawer-knob").text("Verify")
-      if(!verified) {
+      if(!this.verified) {
         $("#wf-form--2").hide()
         $("#verification").show()
         $(this).css("display", "none")
       }
-
-      
-      if(inputAccountType.val()) {
-         if(verified || inputCurrentPage.val() == "dashboard") {
+      if(this.inputAccountType.val()) {
+         if(this.verified || this.inputCurrentPage.val() == "dashboard") {
            $("#btn-drawer-signup-side").hide()
-         } else if(verified || inputAccountType.val() == "professional") {
-            if(inputFullName.val() && $("#professional-profile-fullname")) {
-              $("#professional-profile-fullname").val(inputFullName.val())
+         } else if(this.verified || this.inputAccountType.val() == "professional") {
+            if(this.inputFullName.val() && $("#professional-profile-fullname")) {
+              $("#professional-profile-fullname").val(this.inputFullName.val())
             }
           }
         }
-    getUserId()
+    	  this._getUserId()
     } else {
       $("#btn-drawer-signup-side").show()
       localStorage.clear()
     }
    })
   }
-    
+  async _getUserId() {
+      //sessionStorage.getItem("user_account_id"), "UAID"
+        if(this.pageIsSetup) {
+          return
+        }
+        console.log(" _getUserId()")
+        const inputUAID = $("<input type='hidden' data-user_account_id>");
+        const user_account_idInput = document.querySelector('[data-user_account_id]')
+        
+        const accountType = document.querySelector('[data-account-type]')
+        if(user_account_idInput) {
+          if(user_account_idInput.value) {
+            console.log("user_account_id is good ",user_account_idInput.value )
+          }
+        } else {
+        	const emailInput = document.querySelector('[data-email]')
+          console.log("user_account_id input not created. creating now...")
+          if(this.email) {
+              // const tableReference = accountType.value=="professional" ? "119373" : accountType.value==="company" || accountType.value==="individual" ? "116205" : null
+              // const fieldReference = accountType.value=="professional" ? "field_760997" : accountType.value==="company" || accountType.value==="individual" ? "field_738184" : null
+              const tableReference =  "116205"
+              const fieldReference =  "field_738184"
+              if(tableReference !== null) {
+                  console.log("fetching...")
+                  fetchData("https://api.baserow.io/api/database/rows/table/"+tableReference+"/?filter__"+fieldReference+"__equal="+this.email).then(value=>{     
+                    //sessionStorage.setItem("user_account_id", value.data.results[0].id)
+                    console.log(value.data.results[0], "test shits")
+                    if(value.data.count > 0) {
+                      const employer  = new Employer(value.data.results[0]);
+                      objectRegistrar.set("employer", employer)
+                      this.pageIsSetup = true
+                    }
+                    
+                })
+              }
+            }
+        }
+		}
 }//pageSetup class
+
 </script>
