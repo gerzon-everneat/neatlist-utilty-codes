@@ -1,25 +1,18 @@
-<script>
-    class Message {
-        constructor(Owner) {
-          this.sender = Owner._accountDetails().email
-        this.receiver = null
-        this.message = null
-        
-      }
-      _setMessageText(text) {
-          this.messasge = text;
-      }
-      _setReceiver(receiver) {
-          if(!this.receiver) {
-             this.receiver = receiver
-        }
-      }
-      _sendMessage() {
-      
-      }
-      _messageSentSuccess() {
-      }
-      _messageSentFaild() {
-      }
-    }
-    </script>
+//statistics
+candidates change count base on range of dates
+  -include candidate summary statistics
+use jobposts table to the following data
+  overview graphs
+  views post_count within the week 172921 - i need to get the count by days of the week
+    - field_1150758 employer field
+    - viewed_on field_1151948 date
+    - 
+  applied (job application table : 118042)
+    - field_751776	date_applied : 	a range of dates
+    - field_768138 employer user_ID
+    
+    const weeksAgo = 0; // 0 for the current week, 1 for the previous week, and so on
+
+    const url = `${apiUrl}database/rows/table/${tableId}/?filter__field_${filterFieldId}__date_within_weeks=${weeksAgo}`;
+
+    fallen

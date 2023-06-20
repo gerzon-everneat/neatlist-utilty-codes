@@ -1,182 +1,151 @@
-<style>
-	@media screen and (max-width: 320px) {
-    .each-candidate {
-      margin-bottom: 40px !important;
-    }
-  }
-</style>
-
-
 <script>
-var page = "company"
-	  $('.all-jobs-sorting-components').attr('hidden','hidden')
-	var appliedProfessionals = new Map();
-  var myJobPostsId = [];
-  var selectedProfessional = null
-  var array_candidates = []
-  var currentPage = 1;
-  $("#results-container").empty() 
-  function loadCandidates(page){
-   	const userId = sessionStorage.getItem("user_account_id")
-    console.log(userId, "no id?")
-    if(!userId) {
-    	return 
+  class Candidates {
+    constructor(employer) {
+      this.email = employer._accountDetails().email
+      this.id = employer._accountDetails().id
+      this.candidatesCountValue = null
+      this.activeCandidatesCountValue = null
+      this.newCandidatesCountValue = null
+      this.pagination = 2
     }
-    fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has="+ userId + "&page="+page+"&size=2").then(value =>{
-      
-      if(value.data.count > 0) {
-        console.log(value, "any problem?")
-       
-          $.each(value.data.results, function(key,candidate){
-         
-              const dateTime = new Date(candidate.field_751776)
-             
-              const timeOnly = dateTime.toLocaleTimeString()
-              const dateOnly =  dateTime.toLocaleDateString()
-             
-              var obj = {
-              	id					: candidate.id,
-                title 			: candidate.field_1026493[0].value,
-                professional_id  : candidate.field_768138[0].id,
-                name  			: candidate.field_768139[0].value,
-                initials : getInitials(candidate.field_768139[0].value),
-                email       : candidate.field_751967,
-                location  	: candidate.field_768140[0].value +", "+candidate.field_845523[0].value,
-                experience  : candidate.field_845525[0].value,
-                type				: candidate.field_1024105[0].value,
-                dateapplied : dateOnly,
-                picurl  		: candidate.field_845539[0].value || default_picture,
-                applicationStatus : candidate.field_826075.value,
-                verified : candidate.field_1024367[0].value.value,
-                language : candidate.field_1026501[0].value,
-                english_level : candidate.field_1053047[0].value.value,
-                position : candidate.field_1026500[0].value,
-                trade : candidate.field_1026502[0].value,
-                skills : candidate.field_1026503[0].value,
-                stage : candidate.field_826075.value
+    async _getCandidatesStats() {
+      const response = await fetchData("https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_contains=" + this.email); 
+        const candidatesCounts = document.querySelectorAll('[data-candidates-count]')
+        const newCandidatesCount = document.querySelector('[data-new-candidates]')
+        const activeCandidatesCount = document.querySelector('[data-active-candidates]')
+          if(this.candidatesCountValue!=response.data.count) {
+            candidatesCounts.forEach(candidatesCount=>candidatesCount.textContent = response.data.count)
+              this.candidatesCountValue = response.data.count
+              const currentDate = new Date().toISOString().split("T")[0]; // Get the current date in "YYYY-MM-DD" format
+              const newCandidates = response.data.results.filter(item => {
+              const itemDate = item.field_751776.split("T")[0]; // Extract the date from the "create_at" field
+              return itemDate === currentDate; // Compare the item's date with the current date
+              });
+  
+            console.log(newCandidates,newCandidates.length, "filteredResults");
+  
+            const inActiveStatus = ["hired", "invited", "rejected"]
+            const activeCandidates = response.data.results.filter(item => {
+            const isActive = !inActiveStatus.includes(item.field_826075.value.toLowerCase()); 
+            return isActive; 
+            });
+            console.log(activeCandidates,activeCandidates.length, "activeCandidates")
+          if(this.activeCandidatesCountValue!=activeCandidates.length) {
+            this.activeCandidatesCountValue = activeCandidates.length
+            activeCandidatesCount.textContent = this.activeCandidatesCountValue
+          }
+          if(this.newCandidatesCountValue!=newCandidates.length) {
+            newCandidatesCount.textContent = newCandidates.length
+            this.newCandidatesCountValue = newCandidates.length
+           }
+           const results = response.data.results;
+          // Create an object to store the grouped results
+          const groupedResults = {};
+  
+          // Group the results by field_826075.value
+          results.forEach(item => {
+            const groupKey = item.field_826075.value;
+  
+            // Check if the group key is not null or undefined
+            if (groupKey !== null && groupKey !== undefined) {
+              if (groupedResults.hasOwnProperty(groupKey)) {
+                groupedResults[groupKey].push(item);
+              } else {
+                groupedResults[groupKey] = [item];
               }
-              //const isVerified =  obj.verified == "Verified" 
-           
-              const verifiedIcon = obj.verified == "Verified" ? "https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6442beb8a200b03c7bca5fae_Circle%20Check.svg" : ""
-             console.log(obj.verified)
-        array_candidates.push(obj)
-          $("#results-container").append( 
-          `
-           <tr class = "candidate-row">
-          <td>
-             <div class="candidates-job-title-container">
-              <div class="candidate-td-content candidates-card-mobile-view">
-              <div class="user-initial-name">${obj.initials}</div>
-                <a href="#" class="candidate-name-and-badge-icon w-inline-block">
-                  <div class="candidate-name">${obj.name}</div><div class="candidate-badge-content">
-                  <img src="${verifiedIcon}" loading="lazy" alt="" class="candidate-badge-icon">
+            }
+          });
+        document.querySelector('[data-invite-count]').textContent = groupedResults['Invite']?.length ?? 0
+        document.querySelector('[data-applied-count]').textContent = groupedResults['Applied']?.length ?? 0
+        document.querySelector('[data-interviewed]').textContent = groupedResults['Interviewed']?.length ?? 0
+        document.querySelector('[data-test-count]').textContent = groupedResults['Test']?.length ?? 0
+        document.querySelector('[data-hired-count]').textContent = groupedResults['Hired']?.length ?? 0
+        document.querySelector('[data-rejected-count]').textContent = groupedResults['Rejected']?.length ?? 0
+      }
+     }
+    async _loadCandidates(desiredPage) {
+      console.log(this.id, "no id?")
+      if(!this.id || !desiredPage) {
+        return 
+      }
+      fetchData(`https://api.baserow.io/api/database/rows/table/118042/?filter__field_1007785__link_row_has=${this.id}&page=${desiredPage}&size=${this.pagination}`).then(value =>{
+        console.log(value, "any problem1?")
+        if(value.data.count > 0) {
+          console.log(value, "any problem2?")
+            $.each(value.data.results, function(key,candidate){
+                const dateTime = new Date(candidate.field_751776)
+                const timeOnly = dateTime.toLocaleTimeString()
+                const dateOnly =  dateTime.toLocaleDateString()
+                var obj = {
+                  id					: candidate.id,
+                  title 			: candidate.field_1026493[0].value,
+                  professional_id  : candidate.field_768138[0].id,
+                  name  			: candidate.field_768139[0].value,
+                  initials : getInitials(candidate.field_768139[0].value),
+                  email       : candidate.field_751967,
+                  location  	: candidate.field_768140[0].value +", "+candidate.field_845523[0].value,
+                  experience  : candidate.field_845525[0].value,
+                  type				: candidate.field_1024105[0].value,
+                  dateapplied : dateOnly,
+                  picurl  		: candidate.field_845539[0].value || default_picture,
+                  applicationStatus : candidate.field_826075.value,
+                  verified : candidate.field_1024367[0].value.value,
+                  language : candidate.field_1026501[0].value,
+                  english_level : candidate.field_1053047[0].value.value,
+                  position : candidate.field_1026500[0].value,
+                  trade : candidate.field_1026502[0].value,
+                  skills : candidate.field_1026503[0].value,
+                  stage : candidate.field_826075.value
+                }
+                //const isVerified =  obj.verified == "Verified" 
+                const verifiedIcon = obj.verified == "Verified" ? "https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6442beb8a200b03c7bca5fae_Circle%20Check.svg" : ""
+                 console.log(obj.verified)
+                //array_candidates.push(obj)
+            $("#results-container").append( 
+            `
+             <tr class = "candidate-row">
+            <td>
+               <div class="candidates-job-title-container">
+                <div class="candidate-td-content candidates-card-mobile-view">
+                <div class="user-initial-name">${obj.initials}</div>
+                  <a href="#" class="candidate-name-and-badge-icon w-inline-block">
+                    <div class="candidate-name">${obj.name}</div><div class="candidate-badge-content">
+                    <img src="${verifiedIcon}" loading="lazy" alt="" class="candidate-badge-icon">
+                    </div>
+                   </a>
                   </div>
-                 </a>
-                </div>
-            </div>
-          </td>
-          <td>
-            <div class="candidate-td-content candidates-card-mobile-view job-title">
-            <div class="user-initial-name empty-for-alignment"></div>
-            <div class="candidate-td-text">${obj.title}</div>
-            </div>
-          </td>
-          <td>
-             <div class= "candidate-td-content">
-                <div class="candidates-td-label">Location</div>
-                  <div class="candidate-block-flex-behaviour">
-                    <div class="candidate-td-text">(Queens, NY)</div>
-                      <div class="additional-info-below hidden-on-desktop"> - </div>
-                      <div class="additional-info-below">5 mi</div>
-                </div>
-               </div>
-          </td>
-          <td>
-            <div class = "candidate-td-content">
-              <div class="candidates-td-label">Experience</div><div class="candidate-td-text">${obj.experience}</div>
-            </div>
-          </td>
-          <td>
-            <div class = "candidate-td-content" >
-             <div class="candidates-td-label">Job type</div><div class="candidate-td-text">${obj.type}</div>
-           </div>
-          </td>
-          <td>
-          	<div class = "candidate-td-content">
-              <div class="candidates-td-label">English Level</div><div class="candidate-td-text">${obj.english_level}</div>
-            </div>
-      		</td>
-          <td  class = "candidate-td-content candidate-stage-position">
-            	<div class="cadidate-stage  ${obj.stage.toLowerCase()}">${obj.stage}</div>
-      		</td>
-          <td>
-          	<div class = "candidate-td-content">
-               <div class="candidates-td-label">Applied</div>
-               <div class="candidate-block-flex-behaviour">
-               	<div class="candidate-td-text">12/03/2023</div>
-               	<div class="additional-info-below date-time-applied">09:52PM</div>
-               </div>
+              </div>
+            </td>
+            <td>
+              <div class="candidate-td-content candidates-card-mobile-view job-title">
+              <div class="user-initial-name empty-for-alignment" style = "visibility : hidden"></div>
+              <div class="candidate-td-text">${obj.title}</div>
+              </div>
+            </td>
+  
+            <td>
+              <div class = "candidate-td-content">
+                <div class="candidates-td-label">Experience</div><div class="candidate-td-text">${obj.experience}</div>
+              </div>
+            </td>
+            <td>
+              <div class = "candidate-td-content" >
+               <div class="candidates-td-label">Job type</div><div class="candidate-td-text">${obj.type}</div>
              </div>
-        </td>
-      </tr>
-          `
-          )  
-        })
-        
-          // loadDataTable()
-           if(value.data.next == null) {
-          $("#load-more-button").hide()
-        } else {
-          $("#load-more-button").attr("onclick", `loadCandidates('${++currentPage }')`)
+            </td>
+        </tr>
+            `
+            )  
+          })
+            // loadDataTable()
+             if(value.data.next == null) {
+            $("#load-more-button").hide()
+          } else {
+            $("#load-more-button").attr("onclick", `loadCandidates('${++currentPage }')`)
+          }
+         
         }
-       
-      }
-    
-     })
+       })
+    }
   }
-
-async function updateProApplicationStatus(rowid,new_status)
-{
-	if(!new_status.value) {
-  	return true;
-  }
-  $(new_status).removeAttr('style')
-  var qualified = "#ffeaae"
-  var lead_in = "#cfedff"
-  var interview = "#ebdbff"
-  var rejected = "#ffb8b8"
-  var test = "#dafff6"
-  var hired= "#ccffd1"
-
-	if(new_status.value.toLowerCase() == "qualified") {
-  	$(new_status).css("background-color", qualified )
-  } else if(new_status.value.toLowerCase() == "lead in") {
-  	$(new_status).css("background-color", lead_in )
-  }   else if(new_status.value.toLowerCase() == "interview") { 
-  	$(new_status).css("background-color", interview )
-  }   else if(new_status.value.toLowerCase() == "rejected") {
-  	$(new_status).css("background-color", rejected )
-  }   else if(new_status.value.toLowerCase() == "test") {
-  	$(new_status).css("background-color", test )
-  }  else if(new_status.value.toLowerCase() == "hired") { 
-  	$(new_status).css("background-color", hired )
-  }  else if(new_status.value.toLowerCase() == "new") { 
-  	
-  } 
-  
-  $(new_status).add('style')
-    await axios({
-      method: "PATCH",
-      url: "https://api.baserow.io/api/database/rows/table/118042/"+rowid+"/?user_field_names=true",
-      headers: {
-        Authorization: "Token " + neatlistB.key,
-        "Content-Type": "application/json"
-      },
-      data: {
-        "application_status": new_status.value
-      }
-    }) 
-  }
-  
- $(document).ready(loadCandidates(currentPage))
-</script>
+  </script>

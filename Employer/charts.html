@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../neatlist.js"> </script>
+</head>
+<body>
+    
+  <!-- Canvas elements -->
+  <canvas id="lineChartOverView" data-line-chart></canvas>
+  <canvas id="lineChartViews" data-line-chart></canvas>
+  <canvas id="lineChartApplied" data-line-chart></canvas>
+<style>
+	.graphs {
+  	padding: 30px 15px 30px 15px;
+  }
+</style>
+<script>
+ async function fetchData(url)
+  {
+    try{
+      const response = await axios({
+        method: "GET",
+        url: url,
+        headers: {
+          Authorization: "Token "+neatlistB.key
+        }
+      })
+      return response
+    }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+  }
+    
+
+class LineGraph {
+  constructor() {
+    this.apiUrl = 'https://api.baserow.io/api/';
+    this.jobApplication = 118042;
+    this.dateApplied = 751776;
+    this.viewedPost = 172921;
+    this.dateViewed = 1151948;
+    this.postOwner = 1150758;
+    this.userIdJobApplication = 1007785;
+    this.userIdViewedPost = 1150758;
+    this.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    this.jobAppliedURL = `${this.apiUrl}database/rows/table/${this.jobApplication}/?filter__field_${this.dateApplied}__date_within_weeks=${this.timezone}?1&filter__field_${this.userIdJobApplication}__link_row_has=14`;
+    this.jobViewedURL = `${this.apiUrl}database/rows/table/${this.viewedPost}/?filter__field_${this.dateViewed}__date_within_weeks=${this.timezone}?1&filter__field_${this.userIdViewedPost}__link_row_has=14`;
+    this.jobAppliedData = null
+    this.vewedPostData = null
+    this.jobAppliedGraph = null
+    this.vewedPostGraph = null
+    this.overViewGraph = null
+    this.options = {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    };
+  }
+  _getRecordsCountByDay(records) {
+    const counts = [0, 0, 0, 0, 0, 0, 0];
+    records.forEach(record => {
+      const date = new Date(record.field_751776 ?? record.field_1151948);
+      const dayOfWeek = date.getDay();
+      counts[dayOfWeek]++;
+    });
+    return counts;
+  }
+
+  _createChart(elementId, label, backgroundColor, borderColor, borderWidth, data) {
+    const ctx = document.getElementById(elementId).getContext('2d')
+    const chartData = {
+      labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+      datasets: [{
+        label: label,
+        data: data,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        borderWidth: borderWidth
+      }]
+    };
+        return new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: this.options
+      });
+       // Call _createChartOverView function
+      // ...
+     
+  }
+ _createChartOverView(elementId, dataSets) {
+  const ctx = document.getElementById(elementId).getContext('2d');
+
+    return new Chart(ctx, {
+      type: 'line',
+      data: dataSets,
+      options: this.options
+    });
+}
+
+  _generateGraphForJobApplied() {
+    fetchData(this.jobAppliedURL)
+      .then(value => {
+        console.log(value);
+        const data = this._getRecordsCountByDay(value.data.results);
+        this.jobAppliedData = data
+        if(this.jobAppliedGraph) {
+            this.jobAppliedGraph.destroy()
+        }
+        this.jobAppliedGraph = this._createChart('lineChartApplied', 'Jobs applied', '#FFDE6A', '#FFDE6A', 1, data);
+      });
+  }
+  _generateGraphForViewedPost() {
+    fetchData(this.jobViewedURL)
+      .then(value => {
+        console.log(value);
+        const data = this._getRecordsCountByDay(value.data.results);
+        this.vewedPostData = data
+        if(this.vewedPostGraph) {
+            this.vewedPostGraph.destroy()
+        }
+        this.vewedPostGraph = this._createChart('lineChartViews', 'Jobs views', '#33334E', '#33334E', 1, data);
+      });
+  }
+  _generateOverviewGraph() {
+    console.log(this.vewedPostData && this.jobAppliedData)
+
+    if( this.vewedPostData && this.jobAppliedData) {
+        const dataOverview = {
+        labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+        datasets: [{
+            label: 'Jobs views',
+            data: this.vewedPostData,
+            backgroundColor: '#33334E',
+            borderColor: '#33334E',
+            borderWidth: 1
+        },
+        {
+            label: 'Jobs applied',
+            data: this.jobAppliedData,
+            backgroundColor: '#FFDE6A',
+            borderColor: '#FFDE6A',
+            borderWidth: 1
+        }]
+        };
+        if(this.overViewGraph) {
+            this.overViewGraph.destroy()
+        }
+        this.overViewGraph = this._createChartOverView('lineChartOverView', dataOverview)
+    }
+  }
+}//class ends 
+
+document.addEventListener("DOMContentLoaded", ()=>{
+    const lineGraph = new LineGraph();
+    console.log("loaded")
+    setInterval(() => {
+      try {
+      lineGraph._generateGraphForJobApplied();
+      lineGraph._generateGraphForViewedPost();
+    lineGraph._generateOverviewGraph();
+        
+      //lineGraph._generateOverviewGraph();
+      } catch (error) {
+        console.log("Error occurred during task execution:", error);
+        throw error;
+      }
+  
+  }, 5000);
+// const apiUrl = 'https://api.baserow.io/api/';
+// const jobApplication = 118042;
+// const dateApplied = 751776;
+// const viewedPost = 172921
+// const dateViewed = 1151948
+// const postOwner = 1150758
+// const userIdJobApplication = 1007785
+// const userIdViewedPost = 1150758
+// const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+// const currentWeek = 1; //filter__field_${emailFld}__link_row_has=14
+// const jobAppliedURL = `${apiUrl}database/rows/table/${jobApplication}/?filter__field_${dateApplied}__date_within_weeks=${timezone}?1&filter__field_${userIdJobApplication}__link_row_has=14`;
+// const jobViewedURL = `${apiUrl}database/rows/table/${viewedPost}/?filter__field_${dateViewed}__date_within_weeks=${timezone}?1&filter__field_${userIdViewedPost}__link_row_has=14`;
+// const options = {
+//       scales: {
+//         y: {
+//           beginAtZero: true
+//         }
+//       }
+//     };
+// fetchData(jobAppliedURL)
+//   .then(value => {
+//     console.log(value, "value!!!");
+
+//     // Process the fetched data and create the chart
+//     const dataApplied = {
+//       labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+//       datasets: [{
+//         label: 'Jobs applied',
+//         data: getRecordsCountByDay(value.data.results),
+//         backgroundColor: '#FFDE6A',
+//         borderColor: '#FFDE6A',
+//         borderWidth: 1
+//       }]
+//     };
+//     const ctxApplied = document.getElementById('lineChartApplied').getContext('2d');
+//     const lineChartApplied = new Chart(ctxApplied, {
+//       type: 'line',
+//       data: dataApplied,
+//       options: options
+//     });
+//   })
+//   .catch(error => {
+//     console.log('Error fetching data:', error);
+//   });
+//   fetchData(jobViewedURL)
+//   .then(value => {
+//     // Process the fetched data and create the chart
+//     const dataViews = {
+//       labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+//       datasets: [{
+//         label: 'Jobs views',
+//         data: getRecordsCountByDay(value.data.results),
+//         backgroundColor: '#33334E',
+//         borderColor: '#33334E',
+//         borderWidth: 1
+//       }]
+//     };
+
+//     const ctxViews = document.getElementById('lineChartViews').getContext('2d');
+//     const lineChartViews = new Chart(ctxViews, {
+//       type: 'line',
+//       data: dataViews,
+//       options: options
+//     });
+//   })
+//   .catch(error => {
+//     console.log('Error fetching data:', error);
+//   });
+// function getRecordsCountByDay(records) {
+//   // Initialize an array to hold the count for each day
+//   const counts = [0, 0, 0, 0, 0, 0, 0];
+
+//   // Iterate through the records and count the occurrences for each day
+//   records.forEach(record => {
+//     const date = new Date(record.field_751776 ?? record.field_1151948);
+//     const dayOfWeek = date.getDay();
+//     counts[dayOfWeek]++;
+//   });
+//   return counts;
+// }
+
+//     const dataOverview = {
+//       labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+//       datasets: [{
+//         label: 'Jobs views',
+//         data: [5, 10, 8, 12, 6, 14, 9],
+//         backgroundColor: '#33334E',
+//         borderColor: '#33334E',
+//         borderWidth: 1
+//       },
+//       {
+//         label: 'Jobs applied',
+//         data: [10, 15, 13, 2, 3, 3, 20],
+//         backgroundColor: '#FFDE6A',
+//         borderColor: '#FFDE6A',
+//         borderWidth: 1
+//       }]
+//     };
+
+//     const ctxOverView = document.getElementById('lineChartOverView').getContext('2d');
+//     const lineChartOverView = new Chart(ctxOverView, {
+//       type: 'line',
+//       data: dataOverview,
+//       options: options
+//     });
+    
+
+   
+   })//document ready
+</script>
+</body>
+</html>
