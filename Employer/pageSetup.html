@@ -1,14 +1,21 @@
 <div data-page-setup>
 </div>
 <script>
+var objectRegistrar = new Map()
 var neatlistB = {};
 
 Object.defineProperty(neatlistB, 'key', {
-  value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
-  enumerable: false,
+value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
+enumerable: false,
 });
+  
+  //oVWY0mLrLcKkycPh1czPqraJzcu3Yh13
+  //raZf3tYSdyeJU3mUiLQwVvtY3f06d6tH
+  //h4iR9uofbER0jrqM7QtrgXYvSf9N9oMf
+  //4OLFgRaNmDsZGkh59E53LasHVXx73p9Q
 class PageSetup {
   constructor() {
+  	console.log("PageSetup Created")
     $("[data-page-setup]").empty();
      this.pageIsSetup = false
      this.inputSession = $("<input type='hidden' data-sessioned value='true'>");
@@ -21,14 +28,17 @@ class PageSetup {
      $("#professional-profile-fullname").attr("readonly",true)
      $("#professional-profile-phone").attr("readonly",true)
      this.verified=null;
+     this.employerDetails = null
+     this.isRunning = false;
   	}
-    async _loadMemberStack() {
-      if(this.pageIsSetup) {
-       return
-      }
+    _isRunning() {
+    	return this.isRunning
+    }
+    
+    async _run() {
     window.$memberstackDom.getCurrentMember().then((member) => {
-    console.log(member.data, "member.data")
     if (member.data) {
+    	console.log(member.data, "member.data")
       $("[data-page-setup]").append(this.inputSession)
 
       const fullNameValue = member.data.customFields["first-name"] + " " + member.data.customFields["last-name"]
@@ -40,6 +50,9 @@ class PageSetup {
       this.inputAccountType.val(member.data.customFields["account-type"]);
       $("[data-page-setup]").append(this.inputAccountType)
       $("#create-profile-full-name").val(fullNameValue)
+      this.inputEmail.val(member.data.auth.email);
+      
+      $("[data-page-setup]").append(this.inputEmail);
         if(this.inputAccountType.val()=="company") {
           $("#nav-link-dashboard-pro").hide()
           $("#nav-link-dashboard").show()
@@ -56,8 +69,7 @@ class PageSetup {
           if(!localStorage.getItem("sessioned")) {
             //if(!document.querySelector('[data-sessioned]')) {
           localStorage.setItem("sessioned", true)
-          this.inputEmail.val(member.data.auth.email);
-          $("[data-page-setup]").append(this.inputEmail);
+         
           //window.location.href="/home"
           if(this.inputAccountType.val()=="company") {
              //	$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
@@ -86,6 +98,7 @@ class PageSetup {
          } else if(this.verified || this.inputAccountType.val() == "professional") {
             if(this.inputFullName.val() && $("#professional-profile-fullname")) {
               $("#professional-profile-fullname").val(this.inputFullName.val())
+              
             }
           }
         }
@@ -122,11 +135,18 @@ class PageSetup {
                   console.log("fetching...")
                   fetchData("https://api.baserow.io/api/database/rows/table/"+tableReference+"/?filter__"+fieldReference+"__equal="+this.email).then(value=>{     
                     //sessionStorage.setItem("user_account_id", value.data.results[0].id)
-                    console.log(value.data.results[0], "test shits")
                     if(value.data.count > 0) {
-                      const employer  = new Employer(value.data.results[0]);
-                      objectRegistrar.set("employer", employer)
-                      this.pageIsSetup = true
+                    	let attempt = 1
+                    	while(!objectRegistrar.get("employer") && attempt < 10) {
+                      	console.log("Getting employer ready attemp ", attempt)
+                        const employer  = new Employer(value.data.results[0]);
+                        objectRegistrar.set("employer", employer)
+                        attempt++
+                      }
+                      if(!objectRegistrar.get("employer")) {
+                      	console.log("Failed getting employer ready, attempted ", attempt)
+                      }
+                      this.isRunning = false;
                     }
                     
                 })

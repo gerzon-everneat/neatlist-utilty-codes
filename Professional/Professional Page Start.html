@@ -1,236 +1,156 @@
+<div data-page-setup>
+</div>
 <script>
-  var neatlistB = {};
-  
-  Object.defineProperty(neatlistB, 'key', {
-    value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
-    enumerable: false,
-  });
+var objectRegistrar = new Map()
+var neatlistB = {};
+
+Object.defineProperty(neatlistB, 'key', {
+value: 'RXu4QwYFcshkvXqFko7osvCIX09zc7g9',
+enumerable: false,
+});
   
   //oVWY0mLrLcKkycPh1czPqraJzcu3Yh13
   //raZf3tYSdyeJU3mUiLQwVvtY3f06d6tH
   //h4iR9uofbER0jrqM7QtrgXYvSf9N9oMf
   //4OLFgRaNmDsZGkh59E53LasHVXx73p9Q
-  
-  
- async function MyInbox(){
-    //table chat 118032
-    //fld_user_one field_751723
-    //fld_user_two field_751724 https://api.baserow.io/api/database/rows/table/
-   const table_id = 118032
-        //const url1 = `https://api.baserow.io/v2/grid/118032/rows/?field_751723=${sessionStorage.getItem("email")}`
-      //const filterByEmail = `filter__${jobPostUserAccRelFld}__link_row_contains=`+ sessionStorage.getItem("email")
-      const url1 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751723__equal=company2@test.com`
-      const url2 = `https://api.baserow.io/api/database/rows/table/118032/?filter__field_751724__equal=company2@test.com`
-     
-      const results1 = await fetch(url1, 
-     {
-      headers: {
-        Authorization: `Token ${neatlistB.key}`
-      }
-    }).then(res => res.json());
+class PageSetup {
+  constructor() {
+  	console.log("PageSetup Created")
+    $("[data-page-setup]").empty();
+     this.pageIsSetup = false
+     this.inputSession = $("<input type='hidden' data-sessioned value='true'>");
+     this.inputEmail = $("<input type='hidden' data-email>");
+     this.inputAccountType = $("<input type='hidden' data-account-type>");
+     this.inputFullName = $("<input type='hidden' data-fullname>");
+     this.inputCurrentPage = $("<input type='hidden' data-current-page>");
+     this.email = null
+     $("#professional-profile-email").attr("readonly",true)
+     $("#professional-profile-fullname").attr("readonly",true)
+     $("#professional-profile-phone").attr("readonly",true)
+     this.verified=null;
+     this.employerDetails = null
+     this.isRunning = false;
+  	}
+    _isRunning() {
+    	return this.isRunning
+    }
     
-      const results2 = await fetch(url2,
-      {
-      headers: {
-        Authorization: `Token ${neatlistB.key}`
-      }
-    }).then(res => res.json());
-    console.log(results1, results2, "ano eni?")
-      const combinedResults = [...results1.results, ...results2.results].reduce((unique, item) => {
-        return unique.find(i => i.id === item.id)
-          ? unique
-          : [...unique, item];
-      }, []);
-      if(combinedResults.length){
-         // displayMessagesInbox(combinedResults)
-      }
-        
+    async _run() {
+    window.$memberstackDom.getCurrentMember().then((member) => {
+    if (member.data) {
+    	console.log(member.data, "member.data")
+      $("[data-page-setup]").append(this.inputSession)
+
+      const fullNameValue = member.data.customFields["first-name"] + " " + member.data.customFields["last-name"]
+      this.inputFullName.val(fullNameValue);
+      $("[data-page-setup]").append(this.inputFullName)
+       this.inputEmail.val(member.data.auth.email)
+       this.email = member.data.auth.email
+      $("[data-page-setup]").append(this.inputEmail)
+      this.inputAccountType.val(member.data.customFields["account-type"]);
+      $("[data-page-setup]").append(this.inputAccountType)
+      $("#create-profile-full-name").val(fullNameValue)
+      this.inputEmail.val(member.data.auth.email);
       
-    }
-    
-  
-function displayMessagesInbox(inboxs){
-        $(".grid-new-message-inbox").empty()
-        $.each(inboxs, (key, inbox)=>{
+      $("[data-page-setup]").append(this.inputEmail);
+        if(this.inputAccountType.val()=="company") {
+          $("#nav-link-dashboard-pro").hide()
+          $("#nav-link-dashboard").show()
+        } else if(this.inputAccountType.val()=="individual") {
+          $("#nav-link-dashboard-pro").hide()
+          $("#nav-link-dashboard").show()
+        } else if(this.inputAccountType.val()=="professional") {
+          $("#nav-link-dashboard-pro").show()
+          $("#nav-link-dashboard").hide()
+          //window.location.href="/dashboards/dashboard-prof"
+        } else {
+          console.log("no account-type")
+        }
+          if(!localStorage.getItem("sessioned")) {
+            //if(!document.querySelector('[data-sessioned]')) {
+          localStorage.setItem("sessioned", true)
          
-          let chatId = inbox.field_751705
-        receiver = inbox.field_751723 == objectRegistrar.get("professional")._accountDetails().email ? inbox.field_751724 : inbox.field_751723
-        let picUrl = sessionStorage.getItem("account-type")!="professional" ? inbox.field_751771[0].value : inbox.field_751770[0].value
-        //picUrl = picUrl ? picUrl : defaultPicture
-        console.log(inbox.field_751758, "hosw pics", inbox.field_751769)
-        let notMyName = objectRegistrar.get("professional")._account_type()!="professional" ? inbox.field_751769[0].value : inbox.field_751758[0].value
-        let trade = "HouseKeeper"//sessionStorage.getItem("account-type")!="professional" ? inbox.field_751769 : inbox.field_751758
-       
-        
-        let dateTime = new Date(inbox.field_784870[0].value)
-        let shortDate = dateTime.toLocaleDateString()
-        
-        let professionalId = inbox.field_751756[0].id
-        let companyId = inbox.field_751748[0].id
-        let profilePageRefence =  objectRegistrar.get("professional")._account_type()!="professional" ? "view-profile?pro="+professionalId : "view-company?company="+companyId 
-     
-        console.log("yes")
-      })
-     
-    }
-      function getUserId() {
-        //sessionStorage.getItem("user_account_id"), "UAID"
-          const inputUAID = $("<input type='hidden' data-user_account_id>");
-          const user_account_idInput = document.querySelector('[data-user_account_id]')
-          const emailInput = document.querySelector('[data-email]')
-          const accountType = document.querySelector('[data-account-type]')
-          console.log(accountType.value, "accountType")
-          if(user_account_idInput) {
-            if(user_account_idInput.value) {
-              console.log("user_account_id is good ",user_account_idInput.value )
-            }
+          //window.location.href="/home"
+          if(this.inputAccountType.val()=="company") {
+             //	$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
+               window.location.href="/dashboards/dashboard"
+          } else if(this.inputAccountType.val()=="individual") {
+              //$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
+              window.location.href="/dashboards/dashboard"
+          } else if(this.inputAccountType.val()=="professional") {
+            //  $("#nav-link-dashboard").attr("href", "/dashboards/dashboard-prof")
+              window.location.href="/dashboards/dashboard-prof"
           } else {
-            console.log("user_account_id input not created. creating now...")
-            if(emailInput.value) {
-                // const tableReference = accountType.value=="professional" ? "119373" : accountType.value==="company" || accountType.value==="individual" ? "116205" : null
-                // const fieldReference = accountType.value=="professional" ? "field_760997" : accountType.value==="company" || accountType.value==="individual" ? "field_738184" : null
-                const tableReference =  "119373"
+           
+          }
+      }
+      $("#side-signup-1").hide()
+      this.verified = member.data.verified
+      $("#btn-signup-drawer-knob").text("Verify")
+      if(!this.verified) {
+        $("#wf-form--2").hide()
+        $("#verification").show()
+        $(this).css("display", "none")
+      }
+      if(this.inputAccountType.val()) {
+         if(this.verified || this.inputCurrentPage.val() == "dashboard") {
+           $("#btn-drawer-signup-side").hide()
+         } else if(this.verified || this.inputAccountType.val() == "professional") {
+            if(this.inputFullName.val() && $("#professional-profile-fullname")) {
+              $("#professional-profile-fullname").val(this.inputFullName.val())
+              
+            }
+          }
+        }
+    	  this._getUserId()
+    } else {
+      $("#btn-drawer-signup-side").show()
+      localStorage.clear()
+    }
+   })
+  }
+  async _getUserId() {
+      //sessionStorage.getItem("user_account_id"), "UAID"
+        console.log(" _getUserId()")
+        const inputUAID = $("<input type='hidden' data-user_account_id>");
+        const user_account_idInput = document.querySelector('[data-user_account_id]')
+        
+        const accountType = document.querySelector('[data-account-type]')
+        if(user_account_idInput) {
+          if(user_account_idInput.value) {
+            console.log("user_account_id is good ",user_account_idInput.value )
+          }
+        } else {
+        	const emailInput = document.querySelector('[data-email]')
+          console.log("user_account_id input not created. creating now...")
+          if(this.email) {
+              // const tableReference = accountType.value=="professional" ? "119373" : accountType.value==="company" || accountType.value==="individual" ? "116205" : null
+              // const fieldReference = accountType.value=="professional" ? "field_760997" : accountType.value==="company" || accountType.value==="individual" ? "field_738184" : null
+              const tableReference =  "119373"
                 const fieldReference =  "field_760997"
-                if(tableReference) {
-                    const url = "https://api.baserow.io/api/database/rows/table/"+tableReference+"/?filter__"+fieldReference+"__equal="+emailInput.value
-                    console.log("fetching...", tableReference, fieldReference, emailInput.value, "url :", url)
-                    fetchData(url).then(value=>{
-                      if(value.data.count) {
+              if(tableReference !== null) {
+                  console.log("fetching...")
+                  fetchData("https://api.baserow.io/api/database/rows/table/"+tableReference+"/?filter__"+fieldReference+"__equal="+this.email).then(value=>{     
+                    //sessionStorage.setItem("user_account_id", value.data.results[0].id)
+                    if(value.data.count > 0) {
+                    	let attempt = 1
+                    	while(!objectRegistrar.get("professional") && attempt < 10) {
+                      	console.log("Getting employer ready attemp ", attempt)
                         const professional  = new Professional(value.data.results[0]);
                         objectRegistrar.set("professional", professional)
-                        objectRegistrar.get("professional")._inbox()
+                        attempt++
                       }
-                    	//sessionStorage.setItem("user_account_id", value.data.results[0].id)
-                    	
-                  }, error => console.log(error, "error.value"))
-                }
-              }
-          }
-      }
- 
-  class UserJobPosts {
-    constructor(userAccount, jobPosts) {
-    this.userAccount = userAccount
-    this.jobPosts = jobPosts
-    }
-    _allPosts() {
-      
-    }
-    
-  }
-  </script>
-  
-  
-  <div data-page-setup>
-   <input type = "text" value = 'test'>
-  </div> 
-   
-    
-  
-  <script>
-    
-      //@field_760997 is user_email in accountprofile
-      
-      $(document).ready(function(){
-      $("[data-page-setup]").empty();
-   
-   
-      const inputSession = $("<input type='hidden' data-sessioned value='true'>");
-      const inputEmail = $("<input type='hidden' data-email>");
-      const inputAccountType = $("<input type='hidden' data-account-type>");
-      const inputFullName = $("<input type='hidden' data-fullname>");
-      const inputCurrentPage = $("<input type='hidden' data-current-page>");
-  
-      $("#professional-profile-email").attr("readonly",true)
-      $("#professional-profile-fullname").attr("readonly",true)
-      $("#professional-profile-phone").attr("readonly",true)
-      var verified;
-      
-      window.$memberstackDom.getCurrentMember().then((member) => {
-      if (member.data) {
-        $("[data-page-setup]").append(inputSession)
-
-        const fullNameValue = member.data.customFields["first-name"] + " " + member.data.customFields["last-name"]
-        inputFullName.val(fullNameValue);
-        $("[data-page-setup]").append(inputFullName)
-         inputEmail.val(member.data.auth.email)
-        $("[data-page-setup]").append(inputEmail)
-        
-        
-        
-        inputAccountType.val(member.data.customFields["account-type"]);
-        $("[data-page-setup]").append(inputAccountType)
-  
-
-        $("#create-profile-full-name").val(fullNameValue)
-          if(inputAccountType.val()=="company") {
-            $("#nav-link-dashboard-pro").hide()
-            $("#nav-link-dashboard").show()
-            
-          } else if(inputAccountType.val()=="individual") {
-            $("#nav-link-dashboard-pro").hide()
-            $("#nav-link-dashboard").show()
-
-          } else if(inputAccountType.val()=="professional") {
-            $("#nav-link-dashboard-pro").show()
-            $("#nav-link-dashboard").hide()
-            //window.location.href="/dashboards/dashboard-prof"
-          } else {
-            console.log("no account-type")
-          }
-            if(!localStorage.getItem("sessioned")) {
-              //if(!document.querySelector('[data-sessioned]')) {
-            localStorage.setItem("sessioned", true)
-            
-            inputEmail.val(member.data.auth.email);
-            $("[data-page-setup]").append(inputEmail);
-   
-            
-            //window.location.href="/home"
-            if(inputAccountType.val()=="company") {
-               //	$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
-                 window.location.href="/dashboards/dashboard"
-            } else if(inputAccountType.val()=="individual") {
-                //$("#nav-link-dashboard").attr("href", "/dashboards/dashboard")
-                window.location.href="/dashboards/dashboard"
-            } else if(inputAccountType.val()=="professional") {
-              //  $("#nav-link-dashboard").attr("href", "/dashboards/dashboard-prof")
-                window.location.href="/dashboards/dashboard-prof"
-            } else {
-             
-            }
-        }
-        $("#side-signup-1").hide()
-        verified = member.data.verified
-        $("#btn-signup-drawer-knob").text("Verify")
-        if(!verified) {
-          $("#wf-form--2").hide()
-          $("#verification").show()
-          $(this).css("display", "none")
-        }
-
-        
-        if(inputAccountType.val()) {
-           if(verified || inputCurrentPage.val() == "dashboard") {
-             $("#btn-drawer-signup-side").hide()
-           } else if(verified || inputAccountType.val() == "professional") {
-              if(inputFullName.val() && $("#professional-profile-fullname")) {
-                $("#professional-profile-fullname").val(inputFullName.val())
+                      if(!objectRegistrar.get("professional")) {
+                      	console.log("Failed getting employer ready, attempted ", attempt)
+                      }
+                      this.isRunning = false;
+                    }
+                    
+                })
               }
             }
-          }
-      getUserId()
-      } else {
-        $("#btn-drawer-signup-side").show()
-        localStorage.clear()
-      }
-      })
-   })
-    
-//conversation-header-profile-dp
-//conversation-header-profile-name
-//conversation-header-profile-verified-icon
-//conversation-header-connection-time      
+        }
+		}
+}//pageSetup class
 
-  
 </script>

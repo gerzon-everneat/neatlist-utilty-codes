@@ -1,0 +1,51 @@
+<script>
+    document.addEventListener("DOMContentLoaded", ()=>{
+      setInterval(()=>{
+        taskManager.enqueueTask(async () => {
+         try {
+                 const setUp = objectRegistrar.get("pageSetup")
+            if(setUp) {
+                if(!setUp._isRunning()) {
+                  const candObjectAvailable = objectRegistrar.get("professional")
+                if(!candObjectAvailable) {
+                    setUp._run()
+                } else {
+                    if(!candObjectAvailable._isInboxWorking())
+                        candObjectAvailable._inbox()
+                    }
+              }
+            } else {
+              const pageSetup = new PageSetup();
+              objectRegistrar.set("pageSetup",pageSetup)
+            }
+          } catch (error) {
+            console.log("Error occurred during task execution:", error);
+            throw error;
+          }
+       });
+     }, 100)
+    
+   setInterval(() => {
+      taskManager.enqueueTask(async () => {
+          try {
+          
+          } catch (error) {
+            console.log("Error occurred during task execution:", error);
+            throw error;
+          }
+        });
+      }, 5000);
+   
+    setInterval(() => {
+      taskManager.enqueueTask(async () => {
+          try {
+    
+          } catch (error) {
+            console.log("Error occurred during task execution:", error);
+            throw error;
+          }
+        });
+      }, 5000);
+    })// documenn ready
+  
+    </script>

@@ -2,11 +2,17 @@
   var objectRegistrar = new Map()
    class Professional {
     constructor(accountDetails) {
+        
         this.accountDetails = accountDetails;
         this.account_type = document.querySelector('[data-account-type]').value;
         this.messages = null
         this.chatIDs = null
-       
+        this.messageCount = null
+         this.isInboxWorking = false;
+        console.log("Professional is ready!")
+    }
+    _isInboxWorking(){
+      return this.isInboxWorking
     }
     _accountDetails() {
       return {
@@ -19,9 +25,9 @@
         chats : this.accountDetails.field_751757
       }
     } 
-    _account_type() {
-      return this.account_type;
-    }
+    _isInboxWorking() {
+       return this.isInboxWorking
+     }
    async _candidates(pageNumber, numRows) {
    /*
     let candidates = []
@@ -60,7 +66,7 @@
       */
     }
    async _inbox() {
-     
+     this.isInboxWorking = true
     const email = this._accountDetails().email
     const url1 = `https://api.baserow.io/api/database/rows/table/118033/?filter__field_751728__equal=${email}`
     const url2 = `https://api.baserow.io/api/database/rows/table/118033/?filter__field_751729__equal=${email}`
@@ -86,6 +92,10 @@
     }, []);
       console.log("loading pro inbox!combinedResults", 	combinedResults)
     if(combinedResults.length){
+      if(this.messageCount == combinedResults.length) {
+         this.isInboxWorking = false
+         return
+       }
       this.messages = combinedResults
       const chatIDs = combinedResults.reverse().filter((element, index, self) => {
         return self.findIndex((e) => e.field_751726[0].value === element.field_751726[0].value) === index;
@@ -160,16 +170,20 @@
           chat.setAttribute("data-chat", "");
           chat.setAttribute("data-w-id", "c179f254-f309-e6cb-d491-98161b61a47c");
           chat.innerHTML = `
-            <div class="one-message-conversations">
-              <div class="one-message-conversation-line">
-                <img src="${picUrl}" class="message-sender-profile-preview" loading="lazy" alt="">
-                <div class="div-block-608">
-                  <div class="job-name-dashboard">${trade}</div>
-                  <div class="sender-name-dashboard">${notMyName}</div>
-                  <div class="short-message-dashboard">${lastMessage}</div>
-                </div>
-              </div>
-            </div>
+           <div class="one-message-conversations">
+               <div class="one-message-conversation-line">
+                 <div class="img-wrapper-conversation">
+                   <img src="${picUrl}" class="message-sender-profile-preview" loading="lazy" alt="" style = "border-radius : 24px; width : 30px; height: 30px;">
+                 </div>
+                 
+                 <div class="div-block-608">
+                   <div class="job-name-dashboard">${trade}</div>
+                   <div class="sender-name-dashboard">${notMyName}</div>
+                   <div class="short-message-dashboard">${lastMessage}</div>
+                 </div>
+                 
+               </div>
+             </div>
           `;
          chat.addEventListener("click", function() {
           $('.message-block-messages').removeClass('current-message');

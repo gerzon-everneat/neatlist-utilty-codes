@@ -1,36 +1,49 @@
 <script>
-class TaskManager {
-  constructor() {
-    this.taskQueue = [];
-    this.isProcessing = false;
-    this.iterationCount = 0;
-    this.maxIterations = 30;
-  }
-  enqueueTask(task) {
-    this.taskQueue.push(task);
-    this.processTaskQueue();
-  }
-  async processTaskQueue() {
-    if (this.isProcessing || this.taskQueue.length === 0) {
-      return;
-    }
-    this.isProcessing = true;
-    const task = this.taskQueue.shift();
-    try {
-      await task();
-      console.log("Task executed successfully");
-      this.iterationCount++; 
-      if (this.iterationCount >= this.maxIterations) {
-        console.log("Task iterations reached the maximum limit. Terminating.");
-        return; 
+    class TaskManager {
+      constructor() {
+        this.taskQueue = [];
+        this.isProcessing = false;
+        this.iterationCount = 0;
+        this.maxIterations = 9000;
       }
-    } catch (error) {
-      console.error("Task encountered an error:", error);
+      enqueueTask(task) {
+        this.taskQueue.push(task);
+        this.processTaskQueue();
+      }
+      async processTaskQueue() {
+        if (this.isProcessing || this.taskQueue.length === 0) {
+          return;
+        }
+        this.isProcessing = true;
+        const task = this.taskQueue.shift();
+        try {
+          await task();
+          console.log("Task executed successfully");
+          this.iterationCount++; 
+          if (this.iterationCount >= this.maxIterations) {
+            console.log("Task iterations reached the maximum limit. Terminating.");
+            return; 
+          }
+        } catch (error) {
+          console.error("Task encountered an error:", error);
+        }
+        this.isProcessing = false;
+        this.processTaskQueue();
+      }
     }
-    this.isProcessing = false;
-    this.processTaskQueue();
-  }
-}
-
-
-</script>
+    const taskManager = new TaskManager();
+    //usage
+    /*
+    const taskManager = new TaskManager();
+       setInterval(() => {
+        taskManager.enqueueTask(async () => {
+          try {
+              
+          } catch (error) {
+            console.log("Error occurred during task execution:", error);
+            throw error;
+          }
+        });
+      }, 5000);
+      */
+    </script>

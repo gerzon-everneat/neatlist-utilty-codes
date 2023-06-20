@@ -1,111 +1,131 @@
 <script>
-    class Message {
-        constructor(Owner, inbox) {
-          this.sender = Owner._accountDetails().email
-        this.receiver = inbox.field_751728 == this.sender ? inbox.field_751729 : inbox.field_751728
-        this.message = null
-        this.chatID = inbox.field_751726[0].id
-        this.lastSentHash = null;
-        this._submitBtnSetup()
-      }
-      _sendMessage() {
-         console.log("sending ...")
-      const valid = document.querySelector('[data-desktop-message-text]').value.replace(/\n/g, "").replace(/\s/g, "").trim()
-      if(valid) {
-        this.message = document.querySelector('[data-desktop-message-text]').value.trim()
-      } else {
-        this._messageSentFaild()
-        return
-      }
-      const data =  {
-        "field_751726" : [this.chatID],
-        "field_751728" : this.sender,
-        "field_751729" : this.receiver,
-        "field_751731" : this.message
-      }
-      const hashString = data.field_751726.join("") + data.field_751729 + data.field_751731;
-      
-      if(this.lastSentHash === this._hashCode(hashString)) {
-          return
-      }
-      this.lastSentHash = this._hashCode(hashString)
-      add(data, 118033, neatlistB.key).then(value=>{this._messageSentSuccess(value)}, error=>{this._messageSentFaild(error)})
+  class Message {
+    constructor(Owner, inbox) {
+      this.sender = Owner._accountDetails().email
+      this.receiver = inbox.field_751728 == this.sender ? inbox.field_751729 : inbox.field_751728
+      this.message = null
+      this.chatID = inbox.field_751726[0].id
+      this.lastSentHash = null;
+      this._submitBtnSetup()
     }
+    _sendMessage() {
+     console.log("sending ...")
+    const valid = document.querySelector('[data-desktop-message-text]').value.replace(/\n/g, "").replace(/\s/g, "").trim()
+    if(valid) {
+      this.message = document.querySelector('[data-desktop-message-text]').value.trim()
+    } else {
+      this._messageSentFaild()
+      return
+    }
+    const data =  {
+      "field_751726" : [this.chatID],
+      "field_751728" : this.sender,
+      "field_751729" : this.receiver,
+      "field_751731" : this.message
+    }
+    const hashString = data.field_751726.join("") + data.field_751729 + data.field_751731;
     
-      _createChatId() {
-        const data =  {
-          "field_751723" : this.sender,
-          "field_751724" : this.receiver
-        }
-        add(data, 118032, neatlistB.key)
+    if(this.lastSentHash === this._hashCode(hashString)) {
+      return
+    }
+    this.lastSentHash = this._hashCode(hashString)
+    add(data, 118033, neatlistB.key).then(value=>{this._messageSentSuccess(value)}, error=>{this._messageSentFaild(error)})
+  }
+  
+    _createChatId() {
+      const data =  {
+        "field_751723" : this.sender,
+        "field_751724" : this.receiver
       }
-      _messageSentSuccess(value) {
-      const messageContent = document.querySelector('[data-message-content]')
-      messageContent.appendChild(this._requestMessage(value.data));
-      document.querySelector('[data-desktop-message-text]').value = ''
-      /*
-        this.__sendMessage().then(value=>{
-          const mineOrNot=""
-          const Name = "You"
-          const dayTime = "Now"
-               console.log(value.text)
-          })
-        */
-        }
-      _messageSentFaild(err) {
-      console.log("Sowething went Wrong!", err)
-      this.lastSentHash = null
-      }
-      _submitBtnSetup() {
-        const btnSend =  document.querySelector('[data-btn-submit]')
-        btnSend.addEventListener("click", ()=>{
-            this._sendMessage()
+      add(data, 118032, neatlistB.key)
+    }
+    _messageSentSuccess(value) {
+    const messageContent = document.querySelector('[data-message-content]')
+    messageContent.appendChild(this._requestMessage(value.data));
+    document.querySelector('[data-desktop-message-text]').value = ''
+    /*
+      this.__sendMessage().then(value=>{
+        const mineOrNot=""
+        const Name = "You"
+        const dayTime = "Now"
+         console.log(value.text)
         })
+      */
       }
-        _responseMessage(details) {
-          const res = document.createElement('div')
-        res.className = 'response-message'
-          const message = `<div class="response-message-title"><img src="${ details.field_785422[0].value}" loading="lazy" alt="" class="image-140"><div class="text-block-221">${details.field_892228[0].value}</div></div><div class="response-message-text-block">		<div class="text-block-222">${details.field_751731}</div></div>`
-      res.innerHTML = message;
-        return res
-      }
-      _requestMessage(details) {
-            const req = document.createElement('div')
-         req.className = 'request-message'
-          const message = `<div class="request-message-title"><div class="text-block-223">You</div></div><div class="request-message-text-block"><div class="text-block-224">${details.field_751731}</div></div>`
-         req.innerHTML = message;
-        return req
-      }
-      _openMessage(sortedDates,messages) {
-        //const email = objectRegistrar.get("employer")._accountDetails().email
-        console.log(this.sender, "emeail is working")
-        console.log(messages, "received messages")
-        $('[data-message-content]').empty()
-        sortedDates.forEach(date => {
-        const dateBlock = document.createElement('div');
-        const messageContent = document.querySelector('[data-message-content]')
-        document.querySelector('[data-desktop-message-text]').value = ""
-        dateBlock.className = 'date-block-messenger';
-        dateBlock.innerHTML = `<div class="text-block-225">${date}</div>`;
-        messageContent.appendChild(dateBlock);
-        const descMessages =  messages[date].sort((a,b) => a.id - b.id) 
-           descMessages.forEach(message => {
-          messageContent.appendChild(message.field_751728 === this.sender ? this._requestMessage(message) :  this._responseMessage(message));
-        });
+    _messageSentFaild(err) {
+    console.log("Sowething went Wrong!", err)
+    this.lastSentHash = null
+    }
+    _submitBtnSetup() {
+      const btnSend =  document.querySelector('[data-btn-submit]')
+      const fileIcon = document.querySelector('[data-file-icon]')
+      const imgIcon = document.querySelector('[data-img-icon]')
+      btnSend.addEventListener("click", ()=>{
+        this._sendMessage()
+      })
+      
+      fileIcon.addEventListener("click", ()=>{
+        console.log("click test")
+        $("input[name='file_attachment'] #file-upload-button").trigger("change")
+         const fileInput = document.getElementById("file-upload-button");
+        fileInput.click()
+      })
+      
+      imgIcon.addEventListener("click", ()=>{
+        console.log("click test")
+        const fileInput = document.getElementById("file-upload-button");
+        fileInput.click()
+      })
+      
+    }
+      _responseMessage(details) {
+      const res = document.createElement('div')
+      res.className = 'response-message'
+      res.style.marginRight = "auto"
+      const message = `<div class="response-message-title"><img src="${ details.field_785422[0].value}" loading="lazy" alt="" class="image-140" style = "border-radius : 24px; width : 15px; height : 15px;"><div class="text-block-221">${details.field_892228[0].value}</div></div><div class="response-message-text-block">		<div class="text-block-222">${details.field_751731}</div></div>`
+    res.innerHTML = message;
+      return res
+    }
+    _requestMessage(details) {
+      const req = document.createElement('div')
+       req.className = 'request-message'
+       req.style.marginLeft = "auto"
+       
+      const message = `<div class="request-message-title"><div class="text-block-223">You</div></div><div class="request-message-text-block"><div class="text-block-224">${details.field_751731}</div></div>`
+       req.innerHTML = message;
+      return req
+    }
+    _openMessage(sortedDates,messages) {
+      //const email = objectRegistrar.get("employer")._accountDetails().email
+      console.log(this.sender, "emeail is working")
+      console.log(messages, "received messages")
+      $('[data-message-content]').empty()
+      sortedDates.forEach(date => {
+      const dateBlock = document.createElement('div');
+      const messageContent = document.querySelector('[data-message-content]')
+      document.querySelector('[data-desktop-message-text]').value = ""
+      dateBlock.className = 'date-block-messenger';
+      dateBlock.innerHTML = `<div class="text-block-225">${date}</div>`;
+      messageContent.appendChild(dateBlock);
+      const descMessages =  messages[date].sort((a,b) => a.id - b.id) 
+       descMessages.forEach(message => {
+        messageContent.appendChild(message.field_751728 === this.sender ? this._requestMessage(message) :  this._responseMessage(message));
       });
-      }
-      _hashCode(str) {
-        let hash = 0;
-        if (str.length === 0) {
-          return hash;
-        }
-        for (let i = 0; i < str.length; i++) {
-          const char = str.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash |= 0; // Convert to 32-bit integer
-        }
+    });
+    }
+    _hashCode(str) {
+      let hash = 0;
+      if (str.length === 0) {
         return hash;
       }
+      for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash |= 0; // Convert to 32-bit integer
+      }
+      return hash;
     }
-    
+  }
+  
+  
     </script>

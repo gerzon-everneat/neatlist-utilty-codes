@@ -63,21 +63,22 @@
       _responseMessage(details) {
       const res = document.createElement('div')
       res.className = 'response-message'
-      const message = `<div class="response-message-title"><img src="${details.field_785421[0].value}" loading="lazy" alt="" class="image-140"><div class="text-block-221">${details.field_1141794[0].value}</div></div><div class="response-message-text-block">		<div class="text-block-222">${details.field_751731}</div></div>`
+      res.style.marginRight = "auto"
+      const message = `<div class="response-message-title"><img src="${details.field_785421[0].value}" loading="lazy" alt="" class="image-140" style = "border-radius : 24px; width : 15px; height : 15px;"><div class="text-block-221">${details.field_1141794[0].value}</div></div><div class="response-message-text-block" >		<div class="text-block-222">${details.field_751731}</div></div>`
     res.innerHTML = message;
       return res
     }
     _requestMessage(details) {
       const req = document.createElement('div')
        req.className = 'request-message'
+       req.style.marginLeft = "auto"
       const message = `<div class="request-message-title"><div class="text-block-223">You</div></div><div class="request-message-text-block"><div class="text-block-224">${details.field_751731}</div></div>`
        req.innerHTML = message;
       return req
     }
     _openMessage(sortedDates,messages) {
       //const email = objectRegistrar.get("employer")._accountDetails().email
-      console.log(this.sender, "emeail is working")
-      console.log(messages, "received messages")
+  
       $('[data-message-content]').empty()
       sortedDates.forEach(date => {
       const dateBlock = document.createElement('div');
@@ -86,7 +87,7 @@
       dateBlock.className = 'date-block-messenger';
       dateBlock.innerHTML = `<div class="text-block-225">${date}</div>`;
       messageContent.appendChild(dateBlock);
-      const descMessages =  messages[date].sort((a,b) => b.id - a.id) 
+      const descMessages =  messages[date].sort((a,b) => a.id -  b.id) 
       descMessages.forEach(message => {
         messageContent.appendChild(message.field_751728 === this.sender ? this._requestMessage(message) :  this._responseMessage(message));
       });

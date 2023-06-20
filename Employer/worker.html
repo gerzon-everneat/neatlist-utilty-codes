@@ -1,0 +1,54 @@
+<script>
+    document.addEventListener("DOMContentLoaded", ()=>{
+      setInterval(()=>{
+        taskManager.enqueueTask(async () => {
+         try {
+                 const setUp = objectRegistrar.get("pageSetup")
+            if(setUp) {
+                console.log(setUp._isRunning(), " setUp._isRunning() i need need this false")
+                if(!setUp._isRunning()) {
+                  const empObjectAvailable = objectRegistrar.get("employer")
+                if(!empObjectAvailable) {
+                    setUp._run()
+                } else {
+                  console.log(empObjectAvailable._isInboxWorking(), " empObjectAvailable._isInboxWorking() i need need this false as well")
+                    if(!empObjectAvailable._isInboxWorking()) {
+                        empObjectAvailable._inbox()
+                  }
+                }
+              }
+            } else {
+              const pageSetup = new PageSetup();
+              objectRegistrar.set("pageSetup",pageSetup)
+            }
+          } catch (error) {
+            console.log("Error occurred during task execution:", error);
+            throw error;
+          }
+       });
+     }, 100)
+    
+   setInterval(() => {
+      taskManager.enqueueTask(async () => {
+          try {
+          
+          } catch (error) {
+            console.log("Error occurred during task execution:", error);
+            throw error;
+          }
+        });
+      }, 5000);
+   
+    setInterval(() => {
+      taskManager.enqueueTask(async () => {
+          try {
+    
+          } catch (error) {
+            console.log("Error occurred during task execution:", error);
+            throw error;
+          }
+        });
+      }, 5000);
+    })// documenn ready
+  
+    </script>
