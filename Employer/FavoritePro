@@ -19,15 +19,25 @@
 ```
 ```
 <script>
-function loadFavPro() {
-    fetchData("119373", "?filter__field_1169780__link_row_has=14").then(value=>{//14 is logged in user id
+class FavoriteProfessional {
+    contructor(employer) {
+        this.myId = employer.accountDetails().id
+        this.isRunning = false
+        console.log("FavoriteProfessional object ready!")
+    }
+_isRunning() {
+    return this.isRunning
+}
+_getMyFavPros() {
+    this.isRunning = true
+    fetchData("119373", `?filter__field_1169780__link_row_has=${this.myId}`).then(value=>{//14 is logged in user id
         console.log(value, "fetchData")
         const professionals = value.data.results
         const table_fav_pro = document.querySelector("[data-fav-pro-tr-body]")
         table_fav_pro.innerHTML = ""
         let proMap = new Map();
         professionals.forEach(professional=>{
-
+    
         const tr = document.createElement("tr")
             tr.addEventListener("click", ()=>{ // un fav professional
                 //get linktable array of object
@@ -35,7 +45,7 @@ function loadFavPro() {
                 //map to new array of ids
                 //update row by rowid
                 let dataArr = professional.field_1169780
-                const updateDataArr = dataArr.filter(employer=>employer.id !== 14).map(employer=>employer.id)
+                const updateDataArr = dataArr.filter(employer=>employer.id !== this.myId).map(employer=>employer.id)
                 const data = {
                     "field_1169780": updateDataArr
                 }
@@ -51,8 +61,13 @@ function loadFavPro() {
         `
             table_fav_pro.appendChild(tr)
         })
-    })
+    }, error=>{
+        console.log("something went wrong")
+        this.isRunning = false
+      })
+ }
 }
-loadFavPro()
+const favoritePros = new FavoriteProfessional(objectRegistrar.get("employer"))
+favoritePros._getMyFavPros()
 </script>
 ```
