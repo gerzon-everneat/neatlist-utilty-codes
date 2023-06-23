@@ -1,0 +1,58 @@
+#Favorite Professional
+```
+<table>
+    <thead>
+        <tr>
+            <th> candidate</th>
+            <th>Location</th>
+            <th>Experience</th>
+            <th> Job Type</th>
+            <th>English Level</th>
+            <th>("fav icon empty th")</th>
+        </tr>
+    </thead>
+    
+    <tbody data-fav-pro-tr-body>
+       
+    </tbody>
+</table>
+```
+```
+<script>
+function loadFavPro() {
+    fetchData("119373", "?filter__field_1169780__link_row_has=14").then(value=>{//14 is logged in user id
+        console.log(value, "fetchData")
+        const professionals = value.data.results
+        const table_fav_pro = document.querySelector("[data-fav-pro-tr-body]")
+        table_fav_pro.innerHTML = ""
+        let proMap = new Map();
+        professionals.forEach(professional=>{
+
+        const tr = document.createElement("tr")
+            tr.addEventListener("click", ()=>{ // un fav professional
+                //get linktable array of object
+                //filter array of object remove logged in userid from array of object
+                //map to new array of ids
+                //update row by rowid
+                let dataArr = professional.field_1169780
+                const updateDataArr = dataArr.filter(employer=>employer.id !== 14).map(employer=>employer.id)
+                const data = {
+                    "field_1169780": updateDataArr
+                }
+            updateRowByRowId(data, "119373", neatlistB.key, professional.id).then(res => loadFavPro())
+            })
+            tr.innerHTML = `
+                <td>${getInitials(professional.field_760998)} ${professional.field_760998}</td>//full name
+                <td>${professional.field_761005}, ${professional.field_761006}</td> //city, state
+                <td>${professional.field_1169753}</td> //experience
+                <td>${professional.field_761015[0].value}</td>//job type
+                <td>${professional.field_761011.value}</td> //english level
+                <td><span>fav icon here</span></td>//fav icon
+        `
+            table_fav_pro.appendChild(tr)
+        })
+    })
+}
+loadFavPro()
+</script>
+```
