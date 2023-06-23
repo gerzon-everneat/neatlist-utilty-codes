@@ -37,7 +37,7 @@ _getMyFavPros() {
         table_fav_pro.innerHTML = ""
         let proMap = new Map();
         professionals.forEach(professional=>{
-    
+        //modify where ever you wanna append these.
         const tr = document.createElement("tr")
             tr.addEventListener("click", ()=>{ // un fav professional
                 //get linktable array of object
