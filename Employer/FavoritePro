@@ -67,7 +67,14 @@ _getMyFavPros() {
       })
  }
 }
-const favoritePros = new FavoriteProfessional(objectRegistrar.get("employer"))
-favoritePros._getMyFavPros()
+//using setInterval applicable
+const employerAvailable = objectRegistrar.get("employer")
+if(employerAvailable) {
+const favoritePros = new FavoriteProfessional(employerAvailable)
+    if(!favoritePros_isRunning()) {
+        favoritePros._getMyFavPros()
+    }
+}
+
 </script>
 ```
