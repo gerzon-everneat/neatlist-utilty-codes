@@ -8,6 +8,7 @@
             <th>Experience</th>
             <th> Job Type</th>
             <th>English Level</th>
+            <th>Verified status</th>
             <th>("fav icon empty th")</th>
         </tr>
     </thead>
@@ -16,27 +17,36 @@
        
     </tbody>
 </table>
+<div class="sortingButtons">
+  <button data-sort-asc>asc(default)</button>
+  <button data-sort-desc>desc</button>
+</div>
 ```
 ```
 <script>
 class FavoriteProfessional {
-    contructor(employer) {
-        this.myId = employer.accountDetails().id
+    contructor() {
+        this.myId = 14
         this.isRunning = false
+        this.professionals = null
+       
         console.log("FavoriteProfessional object ready!")
+       
     }
 _isRunning() {
     return this.isRunning
 }
-_getMyFavPros() {
-    this.isRunning = true
-    fetchData("119373", `?filter__field_1169780__link_row_has=${this.myId}`).then(value=>{//14 is logged in user id
-        console.log(value, "fetchData")
-        const professionals = value.data.results
-        const table_fav_pro = document.querySelector("[data-fav-pro-tr-body]")
+_sortByName(sortByName) {
+    if(sortByName == "asc") {
+      this.professionals.sort((a,b)=>a.field_760998.localeCompare(b.field_760998))
+    } else {
+      this.professionals.sort((a,b)=>b.field_760998.localeCompare(a.field_760998))
+    }
+    try {
+      const table_fav_pro = document.querySelector("[data-fav-pro-tr-body]")
         table_fav_pro.innerHTML = ""
         let proMap = new Map();
-        professionals.forEach(professional=>{
+        this.professionals.forEach(professional=>{
         //modify where ever you wanna append these.
         const tr = document.createElement("tr")
             tr.addEventListener("click", ()=>{ // un fav professional
@@ -55,19 +65,42 @@ _getMyFavPros() {
                 <td>${getInitials(professional.field_760998)} ${professional.field_760998}</td>//full name
                 <td>${professional.field_761005}, ${professional.field_761006}</td> //city, state
                 <td>${professional.field_1169753}</td> //experience
-                <td>${professional.field_761015[0].value}</td>//job type
+                <td>${professional.field_761015[0]?.value ?? "Not set"}</td>//job type
                 <td>${professional.field_761011.value}</td> //english level
+                <td>${professional.field_1014911.value}</td> //verified status String
                 <td><span>fav icon here</span></td>//fav icon
         `
             table_fav_pro.appendChild(tr)
         })
+
+    } catch {}
+}
+
+_getMyFavPros() {
+    this.isRunning = true
+    fetchData("119373", `?filter__field_1169780__link_row_has=${this.myId}`).then(value=>{//14 is logged in user id
+      console.log(value, "fetchData")
+      this.professionals = value.data.results
+      this._sortByName("asc")
     }, error=>{
-        console.log("something went wrong")
-        this.isRunning = false
-      })
+      console.log("something went wrong")
+      this.isRunning = false
+    })
+     
  }
 }
+document.addEventListener("DOMContentLoaded", ()=>{
+    const loadFav = new FavoriteProfessional();
+    loadFav._getMyFavPros()
+    const btn1 = document.querySelector('[data-sort-asc]')
+      btn1.addEventListener('click', ()=>loadFav._sortByName("asc"))
+    const btn2 = document.querySelector('[data-sort-desc]')
+      btn2.addEventListener('click', ()=>loadFav._sortByName("desc"))
+})
+
+
 //using setInterval applicable
+/*
 const employerAvailable = objectRegistrar.get("employer")
 if(employerAvailable) {
 const favoritePros = new FavoriteProfessional(employerAvailable)
@@ -75,6 +108,8 @@ const favoritePros = new FavoriteProfessional(employerAvailable)
         favoritePros._getMyFavPros()
     }
 }
+*/
+
 
 </script>
 ```
