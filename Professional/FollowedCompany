@@ -1,41 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script src="../neatlist.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js" integrity="sha512-uMtXmF28A2Ab/JJO2t/vYhlaa/3ahUOgj1Zf27M5rOo8/+fcTUVH0/E0ll68njmjrLqOBjXM3V9NiPFL5ywWPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-</head>
-<body>
-    
-    <!-- /*
-    candidate
-        initial 
-        Full Name field_760998
-
-    Location
-        State, City =  field_761005, field_761006
-        distance = not set
-
-    Experience
-        experience field_1169753 string
-
-    Job Type
-        job_type ex Full Time field_761015 array? just select one
-
-    English Level
-        english_level field_761011 array.value
-    Fav icon(add/remove favorite function  131862 equal field_854119) 
-        */ -->
-<table>
+   
+<table border=1>
     <thead>
         <tr>
             <th> Company Name</th>
             <th>Industry</th>
             <th>Open Jobs Count</th>
-            <th>Following status(unfollow when click)</th>
-           
+            <th> | Following status | </th>
         </tr>
     </thead>
     
@@ -43,182 +13,64 @@
        
     </tbody>
 </table>
+
 <script>
-     async function fetchData(tableId, filters)
-  {
-    try{
-      const response = await axios({
-        method: "GET",
-        url: `https://api.baserow.io/api/database/rows/table/${tableId}/${filters}`,
-             
-        headers: {
-          Authorization: "Token "+neatlistB.key
-        }
-      })
-      return response
-    }catch (error){
-      if(error.response)
-      {
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-      }
-      else if(error.request)
-      {
-      console.log(error.request)
-      }else{
-      console.log('Error',error.message)
-      }
-      console.log(error.config)
-    }
+
+class FollowedCompany {
+  constructor() { //professional dependency injection, empty for now
+    this.id = 48 //professional.id
+    this.getOpenJobsCount = (employer_id) => {
+		  const count =  fetchData("113442", `?filter__field_751992__link_row_has=${parseInt(employer_id)}&filter__field_925534__equal=Open`).then(value=>{
+		      return value.data.count
+		  })
+		  return count
+	      }
+  }
+  _run() {
+    this._loadFollowedCompany(this.getOpenJobsCount)
   }
 
-  async function add(data, table, token) {
-	try {
-    const response =  await axios({
-    method: "POST",
-    url: "https://api.baserow.io/api/database/rows/table/"+table+"/",
-     headers: {
-        Authorization: "Token "+ token,
-        "Content-Type": "application/json"
-      }, data : data
-    })
-  return response;
-  }catch (error){
-      if(error.response)
-      {
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-      }
-      else if(error.request)
-      {
-      console.log(error.request)
-      }else{
-      console.log('Error',error.message)
-      }
-      console.log(error.config)
-    }
-}
-async function deleteData(table, rowId, token) {
-	try {
-  	const response = await axios({
-      method: "DELETE",
-      url: "https://api.baserow.io/api/database/rows/table/"+table+"/"+rowId+"/",
-      headers: {
-        Authorization: "Token "+token,
-        "Content-Type": "application/json"
-      }
-    })
-    return response
-  }catch (error){
-      if(error.response)
-      {
-      console.log(error.response.data)
-      console.log(error.response.status)
-      console.log(error.response.headers)
-      }
-      else if(error.request)
-      {
-      console.log(error.request)
-      }else{
-      console.log('Error',error.message)
-      }
-      console.log(error.config)
-    }
-}
-//to header codes
-async function updateRowByRowId(datas, table, token, rowId) {
-  const response = await axios({
-  method: "PATCH",
-  url: "https://api.baserow.io/api/database/rows/table/"+table+"/"+rowId+"/",
-  headers: {
-    Authorization: "Token " + token,
-    "Content-Type": "application/json"
-  },
-  data : datas
- /* data: {
-    "post_status": object.value
-  } */
-	})
-}
-function getInitials(names) {
-	const name = names.split(" ");
-  if(name.length < 2) {
-  	return names[0].toUpperCase();
-  }
-  return (name[0].charAt(0)+name[1].charAt(0)).toUpperCase()
-}
-
-function loadFollowedCompany() {
-    fetchData("116205", "?filter__field_1172163__link_row_has=48").then(value=>{//48 is logged in user id
-        // console.log(value, "fetchData")
+  _loadFollowedCompany(openJobCount) {
+    fetchData("116205", `?filter__field_1172163__link_row_has=${this.id}`).then(value=>{//48 is logged in user id
         const followedEmployers = value.data.results
         const table_followed_emp = document.querySelector("[data-followed-employer-tr-body]")
         table_followed_emp.innerHTML = ""
       
-       
-        followedEmployers.forEach(followedEmployer=>{
+        followedEmployers.forEach(async (followedEmployer)=>{
             const tr = document.createElement("tr") 
 
             const tdCompanyName = document.createElement("td")
-            tdCompanyName.textContent = followedEmployer.field_738186
+            tdCompanyName.textContent = followedEmployer?.field_738186 ?? "Not set" //company name
             tr.appendChild(tdCompanyName)
 
             const tdIndustry = document.createElement("td")
-            tdIndustry.textContent = followedEmployer.field_738189.value
+            tdIndustry.textContent = followedEmployer.field_738189?.value ?? "Not set" //industry
             tr.appendChild(tdIndustry)
 
             const tdOpenJobsCount = document.createElement("td")
-            tdOpenJobsCount.textContent = 'set this later'
-            tr.appendChild(tdOpenJobsCount)
+            tdOpenJobsCount.textContent = await openJobCount(followedEmployer.id)
+            tr.appendChild(tdOpenJobsCount) //open jobs count
 
             const tdFollowingStatus = document.createElement("td")
-            tdFollowingStatus.textContent = 'Following'
-            tdFollowingStatus.addEventListener("click", ()=>{
+            tdFollowingStatus.textContent = 'Following(this column has click event that unfollows the company)'
+            tdFollowingStatus.addEventListener("click", ()=>{ // added click event to unfollow the company
                 console.log("clicked!")
-                const dataArr = followedEmployer.field_1172163
-                const updateDataArr = dataArr.filter(followedEmployer=>followedEmployer.id !== 48).map(followedEmployer=>followedEmployer.id) //48 is logged in user id
+                const dataArr = followedEmployer?.field_1172163 ?? []
+
+                const updateDataArr = dataArr.filter(followedEmployer=>followedEmployer.id !== this.id).map(followedEmployer=>followedEmployer.id) //48 is logged in user id
                 const data = {
-                    "field_1172163": updateDataArr // Link followers
+                    "field_1172163": updateDataArr
                 }
-            updateRowByRowId(data, "116205", neatlistB.key, followedEmployer.id).then(res => loadFollowedCompany())
+              updateRowByRowId(data, "116205", neatlistB.key, followedEmployer.id).then(res => this._run()) // this updates the link field column with new data array >> tr.remove() if youll use table else rerun method "this._run()"
             })
             tr.appendChild(tdFollowingStatus)
 
-            table_followed_emp.appendChild(tr)
+            table_followed_emp.appendChild(tr) // add new row to table
         })
     })
+  }
 }
-fetchData("113442", "?filter__field_925534__link_row_has=Open").then(value=>{})//48 is logged in user id
-//load job post 113442 where field_925534 is open
-loadFollowedCompany()
-//updateRowByRowId(data, "119373", neatlistB.key, 48).then(res => console.log(res, "success"))
-
-  //fetchData(119373, `?filter__`).then(res => res.json()).then(data => console.log(data))
-    //favorite_professional 119373 -> field_1169780.id === accountDetails().id
-    //emp_that_favs_me field_1169780
-
-    // load favorite professional
-        /*
-    candidate
-        initial 
-        Full Name field_760998
-
-    Location
-        State, City =  field_761005, field_761006
-        distance = not set
-
-    Experience
-        experience field_1169753 string
-
-    Job Type
-        job_type ex Full Time field_761015 array? just select one
-
-    English Level
-        english_level field_761011 array.value
-    Fav icon(add/remove favorite function  131862 equal field_854119) 
-        */
+const followedCompany = new FollowedCompany()
+followedCompany._run()
 </script>
-</body>
-</html> 
+
