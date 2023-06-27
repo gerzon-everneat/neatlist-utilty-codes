@@ -1,0 +1,136 @@
+```
+class CandidateJobsPage {
+    constructor() {
+        this.id = 48 // pro id
+        this.openJobs = null
+        this.data = null
+        this.fetchData =  (tableId, filters) => {
+            return fetchData(tableId, filters)
+        }
+        this.applyJob = (data, table, token) => {
+            return add(data, table, token)
+        }
+    }
+    _isApplied(jobId) {
+        if(!jobId) {
+          return
+        }
+        const applied =  this.fetchData("118042",`?filters__field_768138__link_row_has=${this.id}&filter__field_751965__link_row_has=${jobId}`).then(response=>{
+            return response.data.count > 0 
+        })
+        return applied
+    }
+    async _apply(jobId) { 
+        const isApplied = await this._isApplied(jobId) //check if already applied
+        if(isApplied) {
+          console.log(isApplied, "Already Applied")
+            return
+        }
+        try {
+            this.applyJob(this.data, "118042", neatlistB.key).then(response=>{
+                console.log(response)
+                if(response.data.id > 0) {
+                    console.log("Job Applied Successfully")
+                }
+            })
+        } catch(error) {
+            console.log(error)
+        } finally {
+            this.data = null
+        }
+    }
+_sortByName(sortByName) { // use the method to sort asc/desc
+    if(sortByName == "asc") {
+        this.openJobs.sort((a,b)=>a.field_752002[0]?.value.localeCompare(b.field_752002[0]?.value))
+    } else {
+        this.openJobs.sort((a,b)=>b.field_752002[0]?.value.localeCompare(a.field_752002[0]?.value))
+    }
+    try {
+      const tbl_open_jobs = document.querySelector("[data-open-jobs-tr-body]")
+        tbl_open_jobs.innerHTML = ""
+        
+        this.openJobs.forEach(openJob=>{
+        //modify where ever you wanna append these.
+        const tr = document.createElement("tr")
+
+        const tdCompanyName = document.createElement("td")
+        tdCompanyName.textContent = openJob.field_752002[0]?.value ?? "Not set" //abnormal db has empty company name
+        tr.appendChild(tdCompanyName)
+
+        const tdJobTitle = document.createElement("td")
+        tdJobTitle.textContent = openJob.field_718236
+        tr.appendChild(tdJobTitle)
+
+        const tdSalary = document.createElement("td")
+        tdSalary.textContent = "$"+parseFloat(openJob.field_1153553).toFixed(2) + "/" + openJob.field_1153552 //hourly, weekly etc.
+        tr.appendChild(tdSalary)
+
+        const tdJobType = document.createElement("td")
+        tdJobType.textContent = openJob.field_718255
+        tr.appendChild(tdJobType)
+
+        const tdAction = document.createElement("td")
+        const btnApply = document.createElement("button")
+        btnApply.textContent = "Apply"
+        btnApply.addEventListener("click", ()=>{ //button apply here, 
+        
+            this.data = { //store the data, ready to use as argument
+                "field_751965": [openJob.id], //post id
+                "field_768138": [parseInt(this.id)], //employee profile
+                "field_1007785": [parseInt(openJob.field_751992[0].id)], //employer profile
+                "field_826075": "Applied" //application status
+                }
+                this._apply(openJob.id) 
+            })
+            
+        tdAction.appendChild(btnApply)
+        tr.appendChild(tdAction)
+  
+        tbl_open_jobs.appendChild(tr)
+        })
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+   async _loadOpenJobs() { //load posted jobs with status of Open
+        try {
+            await this.fetchData("113442",`?filter__field_925534__equal=Open`).then( res => {
+                this.openJobs = res.data.results
+                console.log(this.openJobs,  "openJobs")
+                this._sortByName("asc")
+            })
+        } catch (error) {
+            console.log(error)
+        } finally {
+            this._loadConnectionInvitation()
+        }
+       
+    }
+    async _loadConnectionInvitation() {
+         await this.fetchData("155365",`?filter__field_1020569__link_row_has=${this.id}`).then( res => {
+            if(res.data.count < 0) {
+                const cnnectionInvitations = res.data.results;
+                //cant make this work at the moment.
+                //prerequisite, when there is added user under employer profile is to have the added user to sign up from invitation link, or has existing account.
+                //need to create logic when the added user uses the company profile on posting a job, sending invation to candidates, since there is multipll user in 
+                //one employer profile, need to properly indicate who did what.
+                //--message template below--
+                //(invidividual name) invites you to apply to an (Airbnb Cleaner Position) in (Company Name)
+                //Accept || Decline
+
+                cnnectionInvitations.forEach(invitation=>{
+
+                })
+            }
+           
+          
+        })
+    }
+}
+
+const candidateJobsPage = new CandidateJobsPage();
+candidateJobsPage._loadOpenJobs()
+//candidateJobsPage_sortByName("asc")
+//candidateJobsPage_sortByName("desc")
+```
