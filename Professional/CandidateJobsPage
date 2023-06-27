@@ -108,24 +108,25 @@ _sortByName(sortByName) { // use the method to sort asc/desc
        
     }
     async _loadConnectionInvitation() {
-         await this.fetchData("155365",`?filter__field_1020569__link_row_has=${this.id}`).then( res => {
-            if(res.data.count < 0) {
-                const cnnectionInvitations = res.data.results;
-                //cant make this work at the moment.
-                //prerequisite, when there is added user under employer profile is to have the added user to sign up from invitation link, or has existing account.
-                //need to create logic when the added user uses the company profile on posting a job, sending invation to candidates, since there is multipll user in 
-                //one employer profile, need to properly indicate who did what.
-                //--message template below--
-                //(invidividual name) invites you to apply to an (Airbnb Cleaner Position) in (Company Name)
-                //Accept || Decline
+         //  await this.fetchData("155365",`?filter__field_1020569__link_row_has=${this.id}`).then( res => {
+        //     if(!res?.data) { return }
+        //     if(res.data.count < 0) {
+        //         const cnnectionInvitations = res.data.results;
+        //         //cant make this work at the moment.
+        //         //prerequisite, when there is added user under employer profile is to have the added user to sign up from invitation link, or has existing account.
+        //         //need to create logic when the added user uses the company profile on posting a job, sending invation to candidates, since there is multipll user in 
+        //         //one employer profile, need to properly indicate who did what.
+        //         //--message template below--
+        //         //(invidividual name) invites you to apply to an (Airbnb Cleaner Position) in (Company Name)
+        //         //Accept || Decline
 
-                cnnectionInvitations.forEach(invitation=>{
+        //         cnnectionInvitations.forEach(invitation=>{
 
-                })
-            }
+        //         })
+        //     }
            
           
-        })
+        // })
     }
 }
 
