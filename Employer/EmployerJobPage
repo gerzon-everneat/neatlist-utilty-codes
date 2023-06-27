@@ -1,0 +1,338 @@
+```
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="../neatlist.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js" integrity="sha512-uMtXmF28A2Ab/JJO2t/vYhlaa/3ahUOgj1Zf27M5rOo8/+fcTUVH0/E0ll68njmjrLqOBjXM3V9NiPFL5ywWPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .tabs {
+        display: flex;
+        }
+        .tab {
+        cursor: pointer;
+        padding: 10px;
+        background-color: lightgray;
+        }
+        .tab-content {
+        display: none;
+        padding: 10px;
+        }
+        .tab.active {
+        background-color: lightblue;
+        }
+
+        .tab-content.active {
+        display: block;
+        }
+
+
+
+
+    </style>
+    <script>
+const  formatDate = (dateString) => { //2020-01-01T12:00:00Z
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1; // Month index is zero-based, so add 1
+  const day = date.getDate();
+  const year = date.getFullYear();
+
+  // Pad single-digit month and day with leading zeros
+  const formattedMonth = month < 10 ? `0${month}` : month;
+  const formattedDay = day < 10 ? `0${day}` : day;
+
+  return `${formattedMonth}/${formattedDay}/${year}`; //12/30/2020
+}
+
+const formatTime = (dateString) => {
+  const date = new Date(dateString);
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const amPM = hours >= 12 ? "PM" : "AM";
+
+  // Convert hours to 12-hour format
+  const formattedHours = hours % 12 || 12;
+
+  // Pad single-digit hours and minutes with leading zeros
+  const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+
+  return `${formattedHours}:${formattedMinutes} ${amPM}`;
+};
+
+
+async function fetchData(tableId, filters)
+  {
+    try{
+      const response = await axios({
+        method: "GET",
+        url: `https://api.baserow.io/api/database/rows/table/${tableId}/${filters}`,
+             
+        headers: {
+          Authorization: "Token "+neatlistB.key
+        }
+      })
+      return response
+    }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+  }
+
+    function openTab(event, tabId) {
+        const tabContents = document.getElementsByClassName("tab-content");
+        const tabs = document.getElementsByClassName("tab");
+        for (let i = 0; i < tabContents.length; i++) {
+            tabContents[i].style.display = "none";
+            tabs[i].classList.remove("active");
+        }
+        event.target.classList.add("active");
+        document.getElementById(tabId).style.display = "block";
+    }
+       
+</script>
+</head>
+<body>
+<div >
+    <input type="text" class="search" placeholder="search">
+    <!-- load job title base from lists -->
+    <div style="display: block;">
+       <div class="job-title-container" data-job-titles></div>
+    </div>
+
+    
+    <div style="display: block;">
+       <div data-job-types></div>
+    </div>
+
+</div>
+    <div class="tabs">
+        <div class="tab active" onclick="openTab(event, 'tab1')">All stages</div>
+        <div class="tab" onclick="openTab(event, 'tab2')">Open</div>
+        <div class="tab" onclick="openTab(event, 'tab3')">Pause</div>
+        <div class="tab" onclick="openTab(event, 'tab4')">Close</div>
+        <div class="tab" onclick="openTab(event, 'tab5')">Draft</div>
+    </div>
+
+      <div id="tab1" class="tab-content active">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>job title </th>
+                    <th>job type</th>
+                    <th>location</th>
+                    <th>date time</th>
+                    <th>Candidate total</th>
+                    <th>Stage</th>
+                    <th>edit</th>
+                    <th>delete</th> 
+                </tr>
+            </thead>
+            <tbody data-all-stages>
+                
+            </tbody>
+        </table>
+      </div>
+
+      <div id="tab2" class="tab-content">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-all-open>
+                
+            </tbody>
+        </table>
+      </div>
+
+      <div id="tab3" class="tab-content">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-all-pause>
+                
+            </tbody>
+        </table>
+      </div>
+
+      <div id="tab4" class="tab-content">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-all-close>
+                
+            </tbody>
+        </table>
+      </div>
+
+      <div id="tab5" class="tab-content">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody data-all-draft>
+                
+            </tbody>
+        </table>
+      </div>
+<script>
+
+
+    document.addEventListener("DOMContentLoaded", ()=>{
+        const opens = document.querySelector("[data-all-open]");
+        const pauses = document.querySelector("[data-all-pause]");
+        const closes = document.querySelector("[data-all-close]");
+        const drafts = document.querySelector("[data-all-draft]");
+        const allStages = document.querySelector("[data-all-stages]");
+
+
+        const chb = document.createElement("input");
+        chb.type = "checkbox";
+        chb.id = "allCheckbox";
+        const label = document.createElement("label");
+        label.htmlFor = "allCheckbox";
+        label.textContent = "All";
+
+
+
+        const jobTypes = document.querySelector("[data-job-types]");
+        jobTypes.appendChild(chb);
+        jobTypes.appendChild(label);
+
+
+        class EmployerJobsPage {
+            constructor() {
+                this.id = 14
+                this.allStages = null;
+            }
+            _sortJobTitle(sortByTitle) {
+                if(sortByTitle == "asc") {
+                    this.allStages.sort((a,b)=>a.field_718236.localeCompare(b.field_718236))
+                } else if(sortByTitle == "desc"){
+                    this.allStages.sort((a,b)=>b.field_718236.localeCompare(a.field_718236))
+                }
+                let jobIds = []
+                try {
+                    
+                    const allStages = document.querySelector("[data-all-stages]")
+                    allStages.innerHTML = ""
+                    this.allStages.forEach((stage) => {
+                        jobIds.push(stage.id)
+                        const tr = document.createElement("tr");
+                        //job title field_718236 string 
+                        const tdJobTitle = document.createElement("td");
+                        tdJobTitle.textContent = stage.field_718236;
+                        tr.appendChild(tdJobTitle);
+
+                        //job type field_718255 string 
+                        const tdJobType = document.createElement("td");
+                        tdJobType.textContent = stage.field_718255;
+                        tr.appendChild(tdJobType);
+
+                        //location city, state, field_1153548 string distance 
+                        const tdLocation = document.createElement("td");
+                        tdLocation.textContent = stage.field_1153548;
+                        tr.appendChild(tdLocation);
+
+                        //date time created field_718282 
+                        const tdDateCreated = document.createElement("td");
+                        tdDateCreated.textContent = formatDate(stage.field_718282) + "||" + formatTime(stage.field_718282);
+                        tr.appendChild(tdDateCreated);
+
+                        //Candidate total field_786400.lenght, new get job_application with current date 
+                        const tdCandidateTotal = document.createElement("td");
+                        tdCandidateTotal.innerHTML = "Total "+ stage.field_786400.length + `|| new :<span data-${stage.id}></span>` ;
+                        tr.appendChild(tdCandidateTotal); 
+
+                        //Stage field_925534 string 
+                        const tdStage = document.createElement("td");
+                        tdStage.textContent = stage.field_925534;
+                        tr.appendChild(tdStage);
+
+                        //edit 
+                        const tdEdit = document.createElement("td");
+                        const aEdit = document.createElement("a");
+                        aEdit.href = ""
+                        aEdit.textContent = "Edit";
+                        tdEdit.appendChild(aEdit);
+                        tr.appendChild(tdEdit);
+
+                        //delete 
+                        const tdDelete = document.createElement("td");
+                        const aDelete = document.createElement("a");
+                        aDelete.href = ""
+                        aDelete.textContent = "Delete";
+                        tdDelete.appendChild(aDelete);
+                        tr.appendChild(tdDelete);
+
+                        allStages.appendChild(tr);
+                    })
+                } catch (error) {
+                    
+                } finally {
+                    if(jobIds.length > 0) {
+                        jobIds.forEach(async (jobId) => {
+                            const span = document.querySelector(`[data-${jobId}]`);
+                            span.textContent = await this._getNewApplicants(jobId)
+                        })
+                    }
+                   
+                }
+
+            }
+            _loadAllStages() {
+                fetchData("113442", `?filter__field_751992__link_row_has=${this.id}`).then(response => {
+                    if(response.data) {
+                        this.allStages = response.data.results;
+                        this._sortJobTitle("asc");
+                    }
+                   
+                })
+            }
+           async _getNewApplicants(postId) {
+               const newApplicantCount = await fetchData("118042", `?filter__field_751965__link_row_has=${postId}`).then(response => {
+                    if(response.data) {
+                        const applicants = response.data.results;
+                        const newApplicants = applicants.filter(applicant => {
+                            const date = new Date(applicant.field_751776);
+                            const today = new Date();
+                            return date.getDate() == today.getDate() && date.getMonth() == today.getMonth() && date.getFullYear() == today.getFullYear();
+                        })
+                        return newApplicants.length;
+                    }
+                })
+                return newApplicantCount;
+            }
+        }
+        const employerJobsPage = new EmployerJobsPage();
+        employerJobsPage._loadAllStages();
+
+    })//end of DOMContentLoaded
+</script> 
+</body>
+</html>
+
+```
