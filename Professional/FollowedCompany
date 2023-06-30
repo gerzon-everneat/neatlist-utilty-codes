@@ -6,6 +6,8 @@
             <th>Industry</th>
             <th>Open Jobs Count</th>
             <th> | Following status | </th>
+          
+           
         </tr>
     </thead>
     
@@ -13,32 +15,115 @@
        
     </tbody>
 </table>
-
+<div  data-exployer-employer-list></div>
 <script>
 
 class FollowedCompany {
-  constructor() { //professional dependency injection, empty for now
-    this.id = 48 //professional.id
-    this.getOpenJobsCount = (employer_id) => {
-		  const count =  fetchData("113442", `?filter__field_751992__link_row_has=${parseInt(employer_id)}&filter__field_925534__equal=Open`).then(value=>{
-		      return value.data.count
-		  })
-		  return count
-	      }
+  constructor(professional) { //professional dependency injection, empty for now
+    this.id = professional.id //professional.id
+    this.professional = professional
+    this.explore = document.querySelector('[data-exployer-employer-list]')
+    this.companies = null
+    this.interestingCompanies = null
+    this.openJobs = null
+    this.getOpenJobs = async () => {
+        const results = await fetchData("113442", `?filter__field_925534__equal=Open`).then(value=>{
+            return value.data?.results ?? null
+        })
+        return results
+    }
+    this.fetchData = (table, filters) => { // added this 30th of June
+      return fetchData(table, filters)
+    }
   }
   _run() {
-    this._loadFollowedCompany(this.getOpenJobsCount)
+    this._loadFollowedCompany()
   }
+  _getCompanyOpenJobCountById(employerId) {
+      const result = this.openJobs
+        .filter(openJob=>openJob.field_751992[0].id)
+        .filter(openJob=>openJob.field_751992[0].id == parseInt(employerId)).length 
+      return result
+  }
+  async _loadCompanies() { // added this 30th of June
+    try {
+     
+      await this.fetchData("116205", ``).then(value=>{
+        const companiesCount = value.data?.count ?? 0
+        if(companiesCount) {
+          this.companies = value.data.results
+          const myInterest =this.professional.field_1183271;
+          const filteredData = this.companies.filter(company=>company.field_738189)
+                                              .filter(company=>myInterest.map(interest => interest.value).includes(company.field_738189.value))
+          this.interestingCompanies = filteredData
+        }
+      })
+      
+    } catch (error) {
+      console.log(error)
+    } finally {
+      this._exploreCompanies("asc")
+    }
+   
+  }
+  _exploreCompanies(order) {
+    
+    let companyIds = []
+    try {
+     
+      if(this.interestingCompanies?.length) {
+        if(order === 'asc') {
+          this.interestingCompanies.sort((a, b) => a.field_738188.localeCompare(b.field_738188))
+        } else if(order === 'desc') {
+          this.interestingCompanies.sort(a,b => b.field_738188.localeCompare(a.field_738188))
+        }
+        console.log(this.interestingCompanies, "this.interestingCompanies")
+        if(!this.explore) {
+          console.log("List container not ready!")
+          return
+        }
+        this.explore.innerHTML = ""
+        this.interestingCompanies.forEach((company)=>{
+          const name = company.field_738188
+          const logo = company.field_738195 ?? default_picture
+          const industry = company.field_738189?.value || "Not set"
+          const id = company.id
+          const div = document.createElement("div")
+          div.classList.add("one-explore-block-following")
+          div.innerHTML = `<div class="one-explore-block-following">
+            <img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6494d17b58d1eae5d33c3802_Avatar2.png" loading="lazy" alt="" class="image-191">
+            <div class="text-block-304">${name}</div>
+            <div class="text-block-305">${industry}</div>
+            <div class="div-block-790">
+            <img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6494d0499746f8ab2f48e5a4_building-03.png" loading="lazy" alt="">
+            <div class="text-block-306"><span data-open-jobs-count>${this._getCompanyOpenJobCountById(id)}</span> open jobs</div></div>
+            <a data-w-id="b60cd05b-59fb-0fab-9db3-db5028ed8a1b" 
+            href="#" class="button-51 w-button" 
+            style="transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg) rotateZ(0deg) skew(0deg, 0deg); 
+            transform-style: preserve-3d;">Follow</a></div>`
+            console.log(name)
+            this.explore.appendChild(div)
+        })
+      }
+    } catch (error) {
+      console.log(error)
+    } 
 
-  _loadFollowedCompany(openJobCount) {
-    fetchData("116205", `?filter__field_1172163__link_row_has=${this.id}`).then(value=>{//48 is logged in user id
+  }
+  async _loadFollowedCompany() {
+    if(!this.openJobs) {
+        this.openJobs = await this.getOpenJobs().then(value=>{
+          return value
+        })
+      } 
+    await this.fetchData("116205", `?filter__field_1172163__link_row_has=${this.id}`).then(value=>{//48 is logged in user id
         const followedEmployers = value.data.results
         const table_followed_emp = document.querySelector("[data-followed-employer-tr-body]")
         table_followed_emp.innerHTML = ""
-      
+        
         followedEmployers.forEach(async (followedEmployer)=>{
             const tr = document.createElement("tr") 
-
+            
             const tdCompanyName = document.createElement("td")
             tdCompanyName.textContent = followedEmployer?.field_738186 ?? "Not set" //company name
             tr.appendChild(tdCompanyName)
@@ -48,7 +133,7 @@ class FollowedCompany {
             tr.appendChild(tdIndustry)
 
             const tdOpenJobsCount = document.createElement("td")
-            tdOpenJobsCount.textContent = await openJobCount(followedEmployer.id)
+            tdOpenJobsCount.textContent = this._getCompanyOpenJobCountById(followedEmployer.id) 
             tr.appendChild(tdOpenJobsCount) //open jobs count
 
             const tdFollowingStatus = document.createElement("td")
@@ -61,16 +146,26 @@ class FollowedCompany {
                 const data = {
                     "field_1172163": updateDataArr
                 }
-              updateRowByRowId(data, "116205", neatlistB.key, followedEmployer.id).then(res => this._run()) // this updates the link field column with new data array >> tr.remove() if youll use table else rerun method "this._run()"
+              updateRowByRowId(data, "116205", neatlistB.key, followedEmployer.id).then(res => this._run()) // this updates the link field column with new data array >> tr.remove() if youll use table
             })
             tr.appendChild(tdFollowingStatus)
 
             table_followed_emp.appendChild(tr) // add new row to table
         })
+
+        
+        
     })
   }
+
 }
-const followedCompany = new FollowedCompany()
-followedCompany._run()
+document.addEventListener("DOMContentLoaded", ()=>{
+fetchData("119373", `?filter__field_760997__equal=prof4@test.com`).then(value=>{
+  console.log(value.data.results[0])
+  const followedCompany = new FollowedCompany(value.data.results[0])
+  followedCompany._run()
+  followedCompany._loadCompanies()
+  })
+})
 </script>
 
