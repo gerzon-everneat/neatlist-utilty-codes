@@ -39,12 +39,73 @@ class FollowedCompany {
   _run() {
     this._loadFollowedCompany()
   }
+  _isFollower(dataArr) {
+   return dataArr.filter(professional=>professional.id).map(professional=>professional.id).includes(this.id)
+  }
+ async _unFollowCompany(companyId) {
+    const selectedCompany = this.companies.filter(company=>company.id == companyId)[0]
+    let dataArr = selectedCompany.field_1172163
+      const updateDataArr = dataArr.filter(professional=>professional.id !== this.id).map(professional=>professional.id)
+      const data = {
+        "field_1172163": updateDataArr
+      }
+    return await  updateRowByRowId(data, "116205", neatlistB.key, companyId)
+  }
+ async _followCompany(companyId) {
+    const selectedCompany = this.companies.filter(company=>company.id == companyId)[0]
+    let dataArr = selectedCompany.field_1172163
+    if(dataArr == null) {
+      dataArr = []
+    }
+    dataArr.push({"id": this.id})
+    const data = {
+      "field_1172163": dataArr.map(professional=>professional.id)
+    }
+    return await updateRowByRowId(data, "116205", neatlistB.key, companyId)
+   
+  }
+  _getOpenJobsByCompanyId(companyId) {
+    const result = this.openJobs
+      .filter(openJob=>openJob.field_751992[0].id)
+      .filter(openJob=>openJob.field_751992[0].id == parseInt(companyId))
+      
+      return result
+    }
+
+  _loadSelectedCompanyById(companyId) {
+      const selectedCompany = this.companies.filter(company=>company.id == companyId)[0]
+      console.log( "Selected Company details below:")
+      console.log( " > id: ", selectedCompany.id)
+      console.log( " > name: ", selectedCompany.field_738195)
+      console.log( " > logo: ", selectedCompany.field_738188)
+      console.log( " > industry: ", selectedCompany.field_738189?.value || "Not set")
+
+      // const name = result.field_738188
+      //     const logo = company.field_738195 ?? default_picture
+      //     const industry = company.field_738189?.value || "Not set"
+      //     const id = company.id
+
+      this._getOpenJobsByCompanyId(selectedCompany.id).forEach(openJob=>{
+        const companyName = openJob.field_752002[0]?.value ?? "Not set" //fix/remove empty company name
+        const jobTitle = openJob.field_718236
+        const salary = "$"+parseFloat(openJob.field_1153553).toFixed(2) + "/" + openJob.field_1153552 //hourly, weekly etc.
+        const jobType = openJob.field_718255
+        const jobId = openJob.id
+        console.log( " > job id: ", jobId)  
+        console.log( " > job title: ", jobTitle)
+        console.log( " > salary: ", salary)
+        console.log( " > job type: ", jobType)
+        console.log( " > company name: ", companyName)
+        console.log("--------------------------")
+      })
+  }
   _getCompanyOpenJobCountById(employerId) {
       const result = this.openJobs
         .filter(openJob=>openJob.field_751992[0].id)
         .filter(openJob=>openJob.field_751992[0].id == parseInt(employerId)).length 
       return result
   }
+
   async _loadCompanies() { // added this 30th of June
     try {
      
@@ -58,6 +119,7 @@ class FollowedCompany {
           this.interestingCompanies = filteredData
         }
       })
+      
       
     } catch (error) {
       console.log(error)
@@ -84,15 +146,22 @@ class FollowedCompany {
         }
         this.explore.innerHTML = ""
         this.interestingCompanies.forEach((company)=>{
+
           const name = company.field_738188
           const logo = company.field_738195 ?? default_picture
           const industry = company.field_738189?.value || "Not set"
           const id = company.id
+          let dataArr = company.field_1172163 //array of followers id
+          const isFollower = this._isFollower(dataArr)
+          if(isFollower) {
+            //return // skip this company
+          }
+          const followingStatusText = isFollower ? "Following" : "Follow"
           const div = document.createElement("div")
           div.classList.add("one-explore-block-following")
-          div.innerHTML = `<div class="one-explore-block-following">
+          div.innerHTML = `
             <img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6494d17b58d1eae5d33c3802_Avatar2.png" loading="lazy" alt="" class="image-191">
-            <div class="text-block-304">${name}</div>
+            <div class="text-block-304" data-go-to-company>${name}</div>
             <div class="text-block-305">${industry}</div>
             <div class="div-block-790">
             <img src="https://assets.website-files.com/62a1fe4a88d6da5f8b5232b4/6494d0499746f8ab2f48e5a4_building-03.png" loading="lazy" alt="">
@@ -100,9 +169,41 @@ class FollowedCompany {
             <a data-w-id="b60cd05b-59fb-0fab-9db3-db5028ed8a1b" 
             href="#" class="button-51 w-button" 
             style="transform: translate3d(0px, 0px, 0px) scale3d(1, 1, 1) rotateX(0deg) rotateY(0deg) rotateZ(0deg) skew(0deg, 0deg); 
-            transform-style: preserve-3d;">Follow</a></div>`
-            console.log(name)
+            transform-style: preserve-3d;" data-follow-unfollow="${followingStatusText}">${followingStatusText}</a>`
+            
+            div.querySelector("[data-follow-unfollow]").style.cursor = "pointer"
+            div.querySelector("[data-follow-unfollow]").addEventListener("click", (e)=>{
+              
+              if(e.target.getAttribute('data-follow-unfollow') === "Follow") {
+                try {
+                  console.log("clicked Following", id)
+                  this._followCompany(id).then(value=>{
+                    e.target.innerHTML = "Following"
+                  })
+                } catch (error) {
+                  console.log(error)
+                }
+              } else if(e.target.getAttribute('data-follow-unfollow') === "Following"){
+                try {
+                  console.log("clicked Follow", id)
+                  this._unFollowCompany(id).then(value=>{
+                    e.target.innerHTML = "Follow"
+                  })
+                } catch (error) {
+                  console.log(error)
+                }
+              }
+              
+            })
+
+            div.querySelector("[data-go-to-company]").style.cursor = "pointer"
+            div.querySelector("[data-go-to-company]").addEventListener("click", (e)=>{
+              e.preventDefault()
+              this._loadSelectedCompanyById(id)
+            })
+
             this.explore.appendChild(div)
+           
         })
       }
     } catch (error) {
