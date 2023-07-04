@@ -1,4 +1,33 @@
-   
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="../neatlist.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js" integrity="sha512-uMtXmF28A2Ab/JJO2t/vYhlaa/3ahUOgj1Zf27M5rOo8/+fcTUVH0/E0ll68njmjrLqOBjXM3V9NiPFL5ywWPQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+    
+    <!-- /*
+    candidate
+        initial 
+        Full Name field_760998
+
+    Location
+        State, City =  field_761005, field_761006
+        distance = not set
+
+    Experience
+        experience field_1169753 string
+
+    Job Type
+        job_type ex Full Time field_761015 array? just select one
+
+    English Level
+        english_level field_761011 array.value
+    Fav icon(add/remove favorite function  131862 equal field_854119) 
+        */ -->
 <table border=1>
     <thead>
         <tr>
@@ -17,6 +46,113 @@
 </table>
 <div  data-exployer-employer-list></div>
 <script>
+async function fetchData(tableId, filters)
+  {
+    try{
+      const response = await axios({
+        method: "GET",
+        url: `https://api.baserow.io/api/database/rows/table/${tableId}/${filters}`,
+             
+        headers: {
+          Authorization: "Token "+neatlistB.key
+        }
+      })
+      return response
+    }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+  }
+
+  async function add(data, table, token) {
+	try {
+    const response =  await axios({
+    method: "POST",
+    url: "https://api.baserow.io/api/database/rows/table/"+table+"/",
+     headers: {
+        Authorization: "Token "+ token,
+        "Content-Type": "application/json"
+      }, data : data
+    })
+  return response;
+  }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+}
+async function deleteData(table, rowId, token) {
+	try {
+  	const response = await axios({
+      method: "DELETE",
+      url: "https://api.baserow.io/api/database/rows/table/"+table+"/"+rowId+"/",
+      headers: {
+        Authorization: "Token "+token,
+        "Content-Type": "application/json"
+      }
+    })
+    return response
+  }catch (error){
+      if(error.response)
+      {
+      console.log(error.response.data)
+      console.log(error.response.status)
+      console.log(error.response.headers)
+      }
+      else if(error.request)
+      {
+      console.log(error.request)
+      }else{
+      console.log('Error',error.message)
+      }
+      console.log(error.config)
+    }
+}
+//to header codes
+async function updateRowByRowId(datas, table, token, rowId) {
+  const response = await axios({
+  method: "PATCH",
+  url: "https://api.baserow.io/api/database/rows/table/"+table+"/"+rowId+"/",
+  headers: {
+    Authorization: "Token " + token,
+    "Content-Type": "application/json"
+  },
+  data : datas
+ /* data: {
+    "post_status": object.value
+  } */
+	})
+}
+function getInitials(names) {
+	const name = names.split(" ");
+  if(name.length < 2) {
+  	return names[0].toUpperCase();
+  }
+  return (name[0].charAt(0)+name[1].charAt(0)).toUpperCase()
+}
+
+
 
 class FollowedCompany {
   constructor(professional) { //professional dependency injection, empty for now
@@ -80,10 +216,6 @@ class FollowedCompany {
       console.log( " > logo: ", selectedCompany.field_738188)
       console.log( " > industry: ", selectedCompany.field_738189?.value || "Not set")
 
-      // const name = result.field_738188
-      //     const logo = company.field_738195 ?? default_picture
-      //     const industry = company.field_738189?.value || "Not set"
-      //     const id = company.id
 
       this._getOpenJobsByCompanyId(selectedCompany.id).forEach(openJob=>{
         const companyName = openJob.field_752002[0]?.value ?? "Not set" //fix/remove empty company name
@@ -268,5 +400,8 @@ fetchData("119373", `?filter__field_760997__equal=prof4@test.com`).then(value=>{
   followedCompany._loadCompanies()
   })
 })
-</script>
 
+
+</script>
+</body>
+</html> 
